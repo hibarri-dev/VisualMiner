@@ -23,9 +23,9 @@ export default function OpsView({ activeTab, currentRole }) {
 
   const titles = {
     production: ['Production', 'Pit extraction vs plant bottleneck — the demo story.'],
-    processing: ['Processing', 'Crushing, screening and stockpile yield from SCADA + CMMS.'],
-    shipments: ['Shipments', 'Side tipper queue frozen until crushed fines exist.'],
-    collections: ['Collections', 'Yard inventory and reclaimer feeders.']
+    processing: ['Processing', 'ROM → named concentrate piles (42 / 50 / 60%). Plant yield is the bottleneck, not the pit.'],
+    shipments: ['Shipments', 'Gate queue + weighbridge. Sold cargo cannot load until crushed / certified piles exist.'],
+    collections: ['Collections', 'Named stockpiles by purity — including chrome concentrate and anthracite sold raw.']
   }
   const [title, description] = titles[activeTab] || titles.production
 
@@ -68,27 +68,69 @@ export default function OpsView({ activeTab, currentRole }) {
         />
       )}
 
-      {(activeTab === 'shipments' || activeTab === 'collections') && (
+      {(activeTab === 'production' || activeTab === 'processing') && (
         <DataTable
-          columns={
-            activeTab === 'shipments'
-              ? [
-                  { key: 'id', label: 'Tipper' },
-                  { key: 'type', label: 'Type' },
-                  { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
-                  { key: 'waitMin', label: 'Wait', render: r => `${r.waitMin} min` },
-                  { key: 'cargo', label: 'Cargo' },
-                  { key: 'destination', label: 'Destination' }
-                ]
-              : [
-                  { key: 'name', label: 'Stockpile' },
-                  { key: 'tons', label: 'Tons' },
-                  { key: 'capacity', label: 'Capacity' },
-                  { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> }
-                ]
-          }
-          rows={activeTab === 'shipments' ? mine.tippers : mine.stockpiles}
+          columns={[
+            { key: 'name', label: 'Ore body / seam' },
+            { key: 'commodity', label: 'Commodity' },
+            { key: 'headGrade', label: 'Head grade' },
+            { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> }
+          ]}
+          rows={mine.oreBodies || []}
         />
+      )}
+
+      {(activeTab === 'processing' || activeTab === 'collections') && (
+        <DataTable
+          columns={[
+            { key: 'name', label: 'Named stockpile' },
+            { key: 'gradeLabel', label: 'Purity' },
+            { key: 'tons', label: 'Tons' },
+            { key: 'capacity', label: 'Capacity' },
+            { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> }
+          ]}
+          rows={mine.stockpiles}
+        />
+      )}
+
+      {activeTab === 'processing' && (
+        <DataTable
+          columns={[
+            { key: 'sample', label: 'Lab sample' },
+            { key: 'result', label: 'Result' },
+            { key: 'stage', label: 'Cycle stage' },
+            { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
+            { key: 'at', label: 'At' }
+          ]}
+          rows={mine.labTests || []}
+        />
+      )}
+
+      {activeTab === 'shipments' && (
+        <>
+          <DataTable
+            columns={[
+              { key: 'id', label: 'Tipper' },
+              { key: 'type', label: 'Type' },
+              { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
+              { key: 'waitMin', label: 'Wait', render: r => `${r.waitMin} min` },
+              { key: 'cargo', label: 'Cargo' },
+              { key: 'destination', label: 'Destination' }
+            ]}
+            rows={mine.tippers}
+          />
+          <DataTable
+            columns={[
+              { key: 'vehicle', label: 'Weighbridge' },
+              { key: 'pile', label: 'Named pile' },
+              { key: 'plannedKg', label: 'Planned kg' },
+              { key: 'actualKg', label: 'Actual kg' },
+              { key: 'waitMin', label: 'Gate wait', render: r => `${r.waitMin} min` },
+              { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> }
+            ]}
+            rows={mine.weighbridge || []}
+          />
+        </>
       )}
     </ViewFrame>
   )

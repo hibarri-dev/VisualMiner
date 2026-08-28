@@ -1,6 +1,6 @@
 import React from 'react'
 import { Anchor, Ship, ArrowUpRight, CheckCircle2, Clock, Layers } from 'lucide-react'
-import { useVisibleMine } from '../../context/useMineData'
+import { useVisibleMine, useMineData } from '../../context/useMineData'
 import ViewFrame from './ViewFrame'
 import DataTable from '../dashboard/DataTable'
 import StatusBadge from '../dashboard/StatusBadge'
@@ -47,8 +47,37 @@ export function GeofenceView({ currentRole }) {
 
 export function ScheduleView({ currentRole }) {
   const { mine } = useVisibleMine(currentRole)
+  const { acceptHandover } = useMineData()
+  const draft = (mine.handovers || []).find(h => h.status === 'draft')
+
   return (
-    <ViewFrame eyebrow="Timetable" title="Drilling, blasting, shifts" description="Dummy shift plan. Blast window tomorrow 14:00 is the safety overlay.">
+    <ViewFrame
+      eyebrow="Timetable"
+      title="Drilling, blasting, shift handovers"
+      description="Between-shift handovers are recorded for the next crew. Dummy blast window tomorrow 14:00."
+      actions={
+        draft ? (
+          <button
+            onClick={() => acceptHandover()}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition cursor-pointer"
+          >
+            Record B→C handover
+          </button>
+        ) : null
+      }
+    >
+      <DataTable
+        columns={[
+          { key: 'fromShift', label: 'From' },
+          { key: 'toShift', label: 'To' },
+          { key: 'at', label: 'When' },
+          { key: 'recordedBy', label: 'Recorded by' },
+          { key: 'acceptedBy', label: 'Accepted by' },
+          { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
+          { key: 'notes', label: 'Notes' }
+        ]}
+        rows={mine.handovers || []}
+      />
       <DataTable
         columns={[
           { key: 'kind', label: 'Kind' },

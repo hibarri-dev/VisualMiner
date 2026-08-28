@@ -13,7 +13,7 @@ export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenM
   }
 
   if (activeTab === 'sites') {
-    return <SitesView currentRole={currentRole} onOpenModal={onOpenModal} />
+    return <SitesView currentRole={currentRole} onOpenModal={onOpenModal} activeSubTab={activeSubTab} />
   }
 
   if (activeTab === 'mines') {

@@ -12,12 +12,20 @@ import {
   createFeeds
 } from './operations'
 import { createSiteReports } from './siteReports'
+import {
+  createOreBodies,
+  createShiftHandovers,
+  createLabTests,
+  createWeighbridge,
+  createCommunities,
+  buildDailyInsights
+} from './cycle'
 import { clamp, mulberry32, randInt, uniqueCode } from './rng'
 
 export function createMineState() {
   const machines = createMachines()
   const personnel = createPersonnel(machines)
-  return {
+  const state = {
     site: SITE,
     sites: SITES_CATALOG.map(s => ({ ...s })),
     machines,
@@ -33,8 +41,16 @@ export function createMineState() {
     schedule: createSchedule(),
     messages: createMessages(),
     ports: PORTS.map(p => ({ ...p })),
+    oreBodies: createOreBodies(),
+    handovers: createShiftHandovers(),
+    labTests: createLabTests(),
+    weighbridge: createWeighbridge(),
+    communities: createCommunities(),
+    insights: [],
     lastTickAt: Date.now()
   }
+  state.insights = buildDailyInsights(state)
+  return state
 }
 
 function pushHistory(series, value, max = 12) {
@@ -151,7 +167,7 @@ export function tickMine(mine) {
     }
   })
 
-  return {
+  const next = {
     ...mine,
     machines,
     personnel,
@@ -159,6 +175,8 @@ export function tickMine(mine) {
     feeds,
     lastTickAt: Date.now()
   }
+  next.insights = buildDailyInsights(next)
+  return next
 }
 
 export function ingestSiteReport(mine, submission) {
@@ -251,6 +269,7 @@ export function ingestSiteReport(mine, submission) {
     ...next,
     production: refreshNarrative(next)
   }
+  next.insights = buildDailyInsights(next)
 
   return {
     mine: next,
@@ -418,7 +437,9 @@ export function liveStats(mine) {
     weekTrendPercent: mine.production.weekTrendPercent,
     feeds: mine.feeds.length,
     plantAlert: x17?.status === 'mechanical_failure',
-    geofencesActive: mine.geofences.filter(g => g.status === 'active' || g.status === 'armed').length
+    geofencesActive: mine.geofences.filter(g => g.status === 'active' || g.status === 'armed').length,
+    sitesCount: (mine.sites || []).length,
+    sites: mine.sites || []
   }
 }
 

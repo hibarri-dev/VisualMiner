@@ -3,6 +3,8 @@ import { MineDataContext } from './mineContext'
 import {
   addMachineToMine,
   addPersonToMine,
+  addSiteToMine,
+  acceptDraftHandover,
   buildSearchIndex,
   createMineState,
   ingestSiteReport,
@@ -48,6 +50,16 @@ export function MineDataProvider({ children }) {
     return result.person
   }, [])
 
+  const addSite = useCallback(payload => {
+    const result = addSiteToMine(mineRef.current, payload)
+    setMine(result.mine)
+    return result.site
+  }, [])
+
+  const acceptHandover = useCallback(() => {
+    setMine(prev => acceptDraftHandover(prev))
+  }, [])
+
   const selectSearchResult = useCallback(result => {
     if (result.type === 'machine') setSelectedMachineId(result.id)
     if (result.type === 'worker') setSelectedPersonId(result.id)
@@ -71,6 +83,8 @@ export function MineDataProvider({ children }) {
       ingestReport,
       addMachine,
       addPerson,
+      addSite,
+      acceptHandover,
       selectSearchResult
     }),
     [
@@ -83,6 +97,8 @@ export function MineDataProvider({ children }) {
       ingestReport,
       addMachine,
       addPerson,
+      addSite,
+      acceptHandover,
       selectSearchResult
     ]
   )

@@ -18,7 +18,20 @@ export default function AiReportPanel({ onOpenReportModal }) {
           </button>
         </div>
 
-        <div className="space-y-2">
+        <p className="text-[11px] text-slate-500 leading-relaxed">
+          Daily yield bot — stage-aware. Pit can be fine while plant, lab, or gate destroy the sale.
+        </p>
+
+        {(mine.insights || []).slice(0, 4).map(ins => (
+          <div key={ins.id} className="space-y-1 pb-3 border-b border-[#232530]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{ins.area}</div>
+            <h3 className="text-[15px] font-semibold text-white tracking-tight leading-snug">{ins.title}</h3>
+            <p className="text-[12px] text-slate-400 leading-relaxed">{ins.detail}</p>
+          </div>
+        ))}
+
+        <div className="space-y-2 pt-1">
+          <h3 className="text-[15px] font-semibold text-white tracking-tight">Live pulse</h3>
           <h3 className="text-[17px] font-semibold text-white tracking-tight">Extraction</h3>
           <div className="text-[14px] text-slate-300 leading-relaxed font-normal space-y-0.5">
             {production.narrative.extraction.map(line => (
