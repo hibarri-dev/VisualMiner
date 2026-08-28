@@ -2,11 +2,18 @@ import React from 'react'
 import { Bell, Sparkles, X } from 'lucide-react'
 import Sparkline from './Sparkline'
 import { useMineData } from '../../context/useMineData'
+import { explorationNarrative } from '../../data/explorationProject'
+import { drillMeta } from '../../three/oreBody'
 
-export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onCloseDrawer }) {
+export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onCloseDrawer, activeTab }) {
   const { mine } = useMineData()
   const { production } = mine
   const trendSign = production.weekTrendPercent > 0 ? 'Up' : 'Down'
+  const geology = activeTab === 'mines'
+  const geo = geology ? explorationNarrative() : null
+  const metresSeries = geology
+    ? Object.values(drillMeta.metresByYear || { 2021: 0, 2022: 0, 2023: 0, 2024: 1 })
+    : production.extractionHistory
 
   const panelContent = (
     <div className="h-full flex flex-col justify-between bg-[#16171d] text-slate-200 p-5 sm:p-6 select-none overflow-y-auto">
@@ -36,61 +43,69 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
           </div>
         </div>
 
-        {/* 1. Extraction */}
+        {/* 1. Extraction / Project */}
         <div className="space-y-2">
           <h3 className="text-[16px] sm:text-[17px] font-semibold text-white tracking-tight">
-            Extraction
+            {geology ? 'Project' : 'Extraction'}
           </h3>
           <div className="text-[13px] sm:text-[14px] text-slate-300 leading-relaxed font-normal space-y-0.5">
-            {production.narrative.extraction.map(line => (
+            {(geology ? geo.extraction : production.narrative.extraction).map(line => (
               <div key={line}>{line}</div>
             ))}
           </div>
           <div className="pt-1 flex items-center justify-between gap-2 text-[12px] sm:text-[13px] font-medium text-[#ec4899]">
             <span>
-              {trendSign} {Math.abs(production.weekTrendPercent)}% from last week
+              {geology
+                ? `${drillMeta.holeCount} holes in the model`
+                : `${trendSign} ${Math.abs(production.weekTrendPercent)}% from last week`}
             </span>
-            <Sparkline values={production.extractionHistory} color="#ec4899" height={22} />
+            <Sparkline values={geology ? metresSeries : production.extractionHistory} color="#ec4899" height={22} />
           </div>
         </div>
 
-        {/* 2. Throughput */}
+        {/* 2. Throughput / Drilling */}
         <div className="space-y-2 pt-1">
           <h3 className="text-[16px] sm:text-[17px] font-semibold text-white tracking-tight">
-            Throughput
+            {geology ? 'Drilling' : 'Throughput'}
           </h3>
           <div className="text-[13px] sm:text-[14px] text-slate-300 leading-relaxed font-normal space-y-0.5">
-            {production.narrative.throughput.map(line => (
+            {(geology ? geo.throughput : production.narrative.throughput).map(line => (
               <div key={line}>{line}</div>
             ))}
           </div>
           <div className="pt-1 flex items-center justify-between gap-2 text-[12px] sm:text-[13px] font-medium text-[#38bdf8]">
-            <span>Down {Math.abs(production.crushingWeekTrendPercent)}% vs last week</span>
-            <Sparkline values={production.crushingHistory} color="#38bdf8" height={22} />
+            <span>
+              {geology
+                ? `${Math.round(drillMeta.metresDrilled).toLocaleString()} m published`
+                : `Down ${Math.abs(production.crushingWeekTrendPercent)}% vs last week`}
+            </span>
+            <Sparkline values={geology ? metresSeries : production.crushingHistory} color="#38bdf8" height={22} />
           </div>
         </div>
 
-        {/* 3. Shipments */}
+        {/* 3. Shipments / Seismic */}
         <div className="space-y-2 pt-1">
           <h3 className="text-[16px] sm:text-[17px] font-semibold text-white tracking-tight">
-            Shipments
+            {geology ? 'Seismic & assays' : 'Shipments'}
           </h3>
           <div className="text-[13px] sm:text-[14px] text-slate-300 leading-relaxed font-normal space-y-0.5">
-            {production.narrative.shipments.map(line => (
+            {(geology ? geo.shipments : production.narrative.shipments).map(line => (
               <div key={line}>{line}</div>
             ))}
           </div>
-          <div className="pt-1 flex items-center justify-between gap-2 text-[12px] sm:text-[13px] font-medium text-[#f97316]">
-            <span>{production.shipmentMovementPercent}% Movement</span>
-            <Sparkline values={production.shipmentHistory} color="#f97316" height={22} />
-          </div>
+          {!geology && (
+            <div className="pt-1 flex items-center justify-between gap-2 text-[12px] sm:text-[13px] font-medium text-[#f97316]">
+              <span>{production.shipmentMovementPercent}% Movement</span>
+              <Sparkline values={production.shipmentHistory} color="#f97316" height={22} />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Bottom AI Action */}
       <div className="pt-6 border-t border-[#232530] space-y-2 mt-4">
         <div className="text-[10px] text-slate-400 font-mono">
-          {mine.site.code} · Shift {mine.site.currentShift} · Telemetry Live
+          {geology ? `${drillMeta.project?.code || 'NFGC-QW'} · NI 43-101 · Public filings` : `${mine.site.code} · Shift ${mine.site.currentShift} · Telemetry Live`}
         </div>
         <button
           onClick={() => {
