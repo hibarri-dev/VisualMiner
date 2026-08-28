@@ -103,7 +103,7 @@ export function createSchedule() {
   return [
     { id: 'sch-1', kind: 'drilling', title: 'Bench 5 pattern 18 holes', when: 'Today 11:00–15:30', status: 'in_progress' },
     { id: 'sch-2', kind: 'blasting', title: 'Bench 3 East production blast', when: 'Tomorrow 14:00', status: 'scheduled' },
-    { id: 'sch-3', kind: 'shift', title: 'Shift B → C handover', when: 'Today 22:00', status: 'scheduled' },
+    { id: 'sch-3', kind: 'shift', title: 'Shift B → C handover', when: 'Today 14:00', status: 'scheduled' },
     { id: 'sch-4', kind: 'maintenance', title: 'X17 jaw replacement', when: 'Today — ongoing', status: 'critical' },
     { id: 'sch-5', kind: 'drilling', title: 'Pre-split Bench 2 West', when: 'Tomorrow 06:00', status: 'scheduled' }
   ]
