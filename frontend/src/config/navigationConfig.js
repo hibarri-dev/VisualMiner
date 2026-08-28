@@ -1,5 +1,6 @@
 import {
   Map,
+  Compass,
   Mountain,
   Flame,
   Anchor,
@@ -42,6 +43,21 @@ export const NAVIGATION_ITEMS = [
     description: '3D spatial mining site overview & contour elevation'
   },
   {
+    id: 'sites',
+    label: 'Sites',
+    icon: Compass,
+    badge: '5 Managed',
+    description: 'Mining assets, washplants, crushing plants, exploration stages & test results',
+    quickAction: { label: 'Register Site', modalId: 'register-site' },
+    children: [
+      { id: 'site-kolar-north', label: 'Kolar North Open Pit', stage: 'mining', stageLabel: 'Mining', typeLabel: 'Open Pit Mine', badge: 'Active' },
+      { id: 'site-washplant-south', label: 'South Basin Wash Plant', stage: 'processing', stageLabel: 'Processing', typeLabel: 'Wash Plant (No Mine)', badge: 'Plant' },
+      { id: 'site-hospet-crushing', label: 'Hospet Crushing Plant', stage: 'processing', stageLabel: 'Processing', typeLabel: 'Crushing Plant (No Mine)', badge: 'Plant' },
+      { id: 'site-chitradurga', label: 'Chitradurga East Ridge', stage: 'prospecting', stageLabel: 'Prospecting', typeLabel: 'Prospecting & Assay', badge: 'Survey' },
+      { id: 'site-mangalore-port', label: 'New Mangalore Bulk Port', stage: 'processing', stageLabel: 'Logistics', typeLabel: 'Customer-Owned Port', badge: 'Port' }
+    ]
+  },
+  {
     id: 'mines',
     label: 'Mines',
     icon: Mountain,
@@ -81,21 +97,6 @@ export const NAVIGATION_ITEMS = [
       { id: 'proc-yield', label: 'Yield Analytics', icon: BarChart3, badge: '+5%' },
       { id: 'proc-stockpiles', label: 'Stockpiles & Yard', icon: Boxes, badge: '4 zones' }
     ]
-  },
-  {
-    id: 'ports',
-    label: 'Ports',
-    icon: Anchor,
-    badge: 'Terminal 2',
-    description: 'Harbor transshipment and bulk vessel loading'
-  },
-  {
-    id: 'shipments',
-    label: 'Shipments',
-    icon: Truck,
-    badge: '17 Queued',
-    status: 'alert',
-    description: 'Haul truck queues, dispatch logistics & movement'
   },
   {
     id: 'machines',
@@ -154,6 +155,26 @@ export const NAVIGATION_ITEMS = [
       { id: 'col-yard', label: 'Yard Inventory', icon: Boxes },
       { id: 'col-reclaim', label: 'Reclaimer Feeders', icon: Workflow }
     ]
+  },
+  {
+    id: 'ports',
+    label: 'Ports',
+    icon: Anchor,
+    badge: 'Customer Owned',
+    description: 'Customer-owned harbor bulk transshipment & private berths',
+    children: [
+      { id: 'port-terminal-2', label: 'Mangalore Terminal 2 (Deepwater)', badge: 'Waiting Cargo' },
+      { id: 'port-terminal-1', label: 'Terminal 1 Barge Pier C', badge: 'Loading 450 t/h' },
+      { id: 'port-logistics', label: 'Vessel Dispatch & Draft Surveys', badge: 'Active' }
+    ]
+  },
+  {
+    id: 'shipments',
+    label: 'Shipments',
+    icon: Truck,
+    badge: '17 Queued',
+    status: 'alert',
+    description: 'Haul truck queues, dispatch logistics & movement'
   },
   {
     id: 'site-reports',
@@ -234,20 +255,10 @@ export function getNavigationItems(stats) {
         })
       }
     }
-    if (item.id === 'production') {
-      return { ...item, badge: `${stats.extractionTph} t/h` }
-    }
     if (item.id === 'messaging') {
-      return { ...item, badge: `${stats.unreadMessages} new` }
-    }
-    if (item.id === 'mines') {
       return {
         ...item,
-        children: item.children.map(child => {
-          if (child.id === 'mines-feeds') return { ...child, badge: `${stats.feeds} feeds` }
-          if (child.id === 'mines-geofence') return { ...child, badge: `${stats.geofencesActive} active` }
-          return child
-        })
+        badge: stats.unreadMessages > 0 ? `${stats.unreadMessages} new` : ''
       }
     }
     return item

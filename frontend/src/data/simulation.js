@@ -1,4 +1,4 @@
-import { SITE, GEOFENCES, PORTS, WORKER_PERSONA } from './catalog'
+import { SITE, SITES_CATALOG, GEOFENCES, PORTS, WORKER_PERSONA } from './catalog'
 import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed } from './machines'
 import { createPersonnel } from './personnel'
 import {
@@ -19,6 +19,7 @@ export function createMineState() {
   const personnel = createPersonnel(machines)
   return {
     site: SITE,
+    sites: SITES_CATALOG.map(s => ({ ...s })),
     machines,
     personnel,
     production: createProduction(),
