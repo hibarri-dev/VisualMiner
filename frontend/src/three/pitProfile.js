@@ -1,19 +1,19 @@
 import { Color } from 'three'
 import { SITE, BENCHES } from '../data/catalog'
 
-export const PIT_RADIUS = 5
-export const PIT_GROUND_RADIUS = 6.6
-export const PIT_FLOOR_RADIUS = 0.55
-export const PIT_DEPTH = 3.2
+export const PIT_RADIUS = 5.35
+export const PIT_GROUND_RADIUS = 7.1
+export const PIT_FLOOR_RADIUS = 1.05
+export const PIT_DEPTH = 3.35
 
 const DEPTH_COLOR_STOPS = [
-  [0, '#1e3a8a'],
-  [0.16, '#0284c7'],
-  [0.34, '#059669'],
-  [0.5, '#eab308'],
-  [0.66, '#ea580c'],
-  [0.84, '#991b1b'],
-  [1, '#78350f']
+  [0, '#1d4ed8'],
+  [0.16, '#0ea5e9'],
+  [0.32, '#10b981'],
+  [0.48, '#a3e635'],
+  [0.64, '#facc15'],
+  [0.8, '#f97316'],
+  [1, '#dc2626']
 ]
 
 export function elevationToT(elevation) {
@@ -53,7 +53,7 @@ export function buildPitLevels() {
   const n = elevations.length
   return elevations.map((elevation, i) => ({
     elevation,
-    radius: PIT_FLOOR_RADIUS + (PIT_RADIUS - PIT_FLOOR_RADIUS) * (1 - i / (n - 1)) ** 0.85
+    radius: PIT_FLOOR_RADIUS + (PIT_RADIUS - PIT_FLOOR_RADIUS) * (1 - i / (n - 1))
   }))
 }
 
@@ -74,17 +74,33 @@ export function radiusForElevation(elevation, levels) {
 
 export function elevationForBenchName(name) {
   const bench = BENCHES.find(b => b.name === name)
-  return bench ? bench.elevation : SITE.elevation.rim
+  if (bench) return bench.elevation
+  const key = (name || '').toLowerCase()
+  if (key.includes('floor')) return SITE.elevation.floor + 40
+  if (key.includes('crusher') || key.includes('rom') || key.includes('workshop') || key.includes('haul')) {
+    return SITE.elevation.rim
+  }
+  return SITE.elevation.rim
 }
 
 // Places a marker exactly on its bench ring: direction comes from the machine's
 // x/y (0-100, pit-relative), radius/height come from the bench's real elevation.
-export function pitMarkerPosition(x, y, benchOrZoneName, levels) {
-  const elevation = elevationForBenchName(benchOrZoneName)
+export function pitWorldPosition(x, y, elevation, levels, radiusBias = 0) {
   const worldY = elevationToY(elevation)
-  const radius = radiusForElevation(elevation, levels)
+  const radius = radiusForElevation(elevation, levels) + radiusBias
   const nx = (x - 50) / 50
   const nz = (y - 50) / 50
   const len = Math.hypot(nx, nz) || 1
   return [(nx / len) * radius, worldY, (nz / len) * radius]
+}
+
+export function pitMarkerPosition(x, y, benchOrZoneName, levels) {
+  return pitWorldPosition(x, y, elevationForBenchName(benchOrZoneName), levels)
+}
+
+export function headingY(from, to) {
+  const dx = to[0] - from[0]
+  const dz = to[2] - from[2]
+  if (Math.hypot(dx, dz) < 1e-5) return null
+  return Math.atan2(dx, dz)
 }

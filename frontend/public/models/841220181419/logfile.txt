@@ -1,0 +1,46 @@
+Log for creating 3D model tile(s) for  V4_1_27.84_-26.45 
+ 
+DEM_name = JAXA/ALOS/AW3D30/V4_1 
+trlat = -26.084987570588368 
+trlon = 28.417090674197205 
+bllat = -26.820984745463335 
+bllon = 27.258948584353455 
+printres = 0.4 
+ntilesx = 1 
+ntilesy = 1 
+tilewidth = 100.0 
+basethick = 1 
+zscale = 1.0 
+fileformat = obj 
+no_bottom = False 
+unprojected = False 
+no_normals = True 
+
+process started: 08:16:21.421038 
+
+Region (lat/lon):
+   -26.084987570588368 28.417090674197205 (top right)
+   -26.820984745463335 27.258948584353455 (bottom left) 
+center at [27.83801962927533, -26.45298615802585], UTM35S, EPSG:32735 
+lon/lat size in degrees: [1.15814208984375, 0.7359971748749672] 
+Earth Engine raster: JAXA/ALOS/AW3D30/V4_1 
+URL for geotiff is:  https://earthengine.googleapis.com/v1/projects/touchterrainstandalone2022/thumbnails/2b30a4d4beccb659fd52488b62785ec4-5d862708ebd18d0f6975ae34472d81d6:getPixels 
+ geotiff size: 0.04733753204345703 Mb 
+ cell size 462.00878386403826 m, upper left corner (x/y):  525303.9872534116 7114935.271506189 
+full (untiled) raster (height,width)  (179, 252) float64 elev. min/max: 1353.0 1885.0 
+cell size: 462.00878386403826 m  
+adjusted print res from the requested 0.4 mm to 0.3968253968253968 mm to ensure correct model dimensions 
+total model size in mm: 100.0 x 71.03174603174604 
+map scale is 1 : 1164262.1353373763 
+Cells per tile (x/y) 252 x 179 
+using single-core only (multi-core is currently broken :( 
+
+1 x 1 tiles, tile size 100.00 x 71.03 mm
+ 
+tile 1 1 : height:  1.0 - 1.4569417692570057 mm , file size: 13 Mb 
+
+total size for all tiles: 12.8 Mb 
+added full geotiff as V4_1_27.84_-26.45.tif 
+added histogram of elevation values as V4_1_27.84_-26.45_DEMandHistogram.png 
+
+processing finished: 08:16:25.180842 
