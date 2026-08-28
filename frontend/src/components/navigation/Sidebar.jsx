@@ -6,7 +6,8 @@ import {
   Layers,
   Sparkles
 } from 'lucide-react'
-import { NAVIGATION_ITEMS } from '../../config/navigationConfig'
+import { getNavigationItems } from '../../config/navigationConfig'
+import { useMineData } from '../../context/useMineData'
 
 export default function Sidebar({
   activeTab,
@@ -16,6 +17,8 @@ export default function Sidebar({
   onOpenModal,
   isCollapsed
 }) {
+  const { stats } = useMineData()
+  const navigationItems = getNavigationItems(stats)
   const [expandedMenus, setExpandedMenus] = useState({
     mines: false,
     processing: false,
@@ -36,7 +39,7 @@ export default function Sidebar({
       <div className="flex-1 flex flex-col pt-6 pb-4 overflow-y-auto">
         {/* Navigation List */}
         <nav className="px-3 space-y-1">
-          {NAVIGATION_ITEMS.map(item => {
+          {navigationItems.map(item => {
             const isActive = activeTab === item.id
             const hasChildren = item.children && item.children.length > 0
             const isExpanded = expandedMenus[item.id]
@@ -128,7 +131,7 @@ export default function Sidebar({
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Telemetry Live</span>
         </div>
-        <span className="text-slate-400">10 APIs</span>
+        <span className="text-slate-400">{stats.feeds} APIs</span>
       </div>
     </aside>
   )
