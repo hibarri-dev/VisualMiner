@@ -139,7 +139,7 @@ export const FEATURED_MACHINES = [
     tracked: true,
     trackerId: 'GPS-X7UIH53',
     waypointIndex: 5,
-    speed: 2.4
+    speed: 7.4
   },
   {
     id: 'XYTH67',
@@ -159,7 +159,7 @@ export const FEATURED_MACHINES = [
     trackerId: 'GPS-XYTH67',
     waypointIndex: 0,
     elevation: 760,
-    speed: 0.9
+    speed: 2.9
   },
   {
     id: 'K4MPL22',
@@ -179,7 +179,7 @@ export const FEATURED_MACHINES = [
     trackerId: 'GPS-K4MPL22',
     waypointIndex: 0,
     elevation: 900,
-    speed: 2.6
+    speed: 7.8
   }
 ]
 
@@ -213,9 +213,9 @@ export function spacePitMachines(machines) {
 }
 
 export function pathSpeed(path) {
-  if (path === 'haul') return 2.4
-  if (path === 'rim') return 1.3
-  return 0.95
+  if (path === 'haul') return 7.2
+  if (path === 'rim') return 4.6
+  return 2.8
 }
 
 export function stepAlongPath(m) {
@@ -329,7 +329,7 @@ export function createMachines() {
     }
   })
 
-  return spacePitMachines(machines)
+  return machines
 }
 
 export function machineGroup(type) {

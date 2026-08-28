@@ -14,18 +14,24 @@ export const MACHINE_GLB = {
 
 export const WORKER_GLB = `${MODELS}/worker.glb`
 export const TERRAIN_GLB = `${MODELS}/pit-terrain.glb`
+export const QUARRY_GCP = `${MODELS}/quarry_gcp.glb`
+
+export const QUARRY_WALL = {
+  diff: `${MODELS}/quarry-wall/diff.jpg`,
+  disp: `${MODELS}/quarry-wall/disp.jpg`
+}
 
 export const MODEL_SIZE = {
-  haul_truck: 0.5,
-  excavator: 0.46,
-  shovel: 0.55,
-  front_loader: 0.4,
-  dozer: 0.38,
-  grader: 0.38,
-  drill: 0.4,
-  water_truck: 0.46,
-  fuel_truck: 0.46,
-  worker: 0.32
+  haul_truck: 0.34,
+  excavator: 0.3,
+  shovel: 0.36,
+  front_loader: 0.28,
+  dozer: 0.26,
+  grader: 0.26,
+  drill: 0.28,
+  water_truck: 0.32,
+  fuel_truck: 0.32,
+  worker: 0.18
 }
 
 export const GLB_PRELOAD = [
@@ -33,5 +39,6 @@ export const GLB_PRELOAD = [
   MACHINE_GLB.excavator,
   MACHINE_GLB.shovel,
   MACHINE_GLB.front_loader,
-  WORKER_GLB
+  WORKER_GLB,
+  QUARRY_GCP
 ]

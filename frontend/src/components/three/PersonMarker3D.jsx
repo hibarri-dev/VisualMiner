@@ -1,17 +1,11 @@
 import React, { useMemo, useState } from 'react'
 import { Html, useCursor } from '@react-three/drei'
-import { buildPitLevels, elevationForBenchName, pitWorldPosition } from '../../three/pitProfile'
-import { geoMarkerPosition, SCAN_RELIEF } from '../../three/geoTerrain'
+import { quarryMarkerPosition } from '../../three/quarryTerrain'
 import { MODEL_SIZE, WORKER_GLB } from '../../three/modelCatalog'
 import ThermalGltf from './ThermalGltf'
 
-export default function PersonMarker3D({ person, selected, onSelect, scan = false }) {
-  const levels = useMemo(() => buildPitLevels(), [])
-  const elevation = elevationForBenchName(person.zone)
-  const position = useMemo(() => {
-    if (scan) return geoMarkerPosition(person.x, person.y, SCAN_RELIEF)
-    return pitWorldPosition(person.x, person.y, elevation, levels, -0.16)
-  }, [scan, person.x, person.y, elevation, levels])
+export default function PersonMarker3D({ person, selected, onSelect }) {
+  const position = useMemo(() => quarryMarkerPosition(person.x, person.y, 0.008), [person.x, person.y])
   const [hovered, setHovered] = useState(false)
   useCursor(hovered)
 

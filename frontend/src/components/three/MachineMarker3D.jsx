@@ -2,25 +2,24 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html, useCursor } from '@react-three/drei'
 import { MACHINE_TYPES, TRACK_PATHS } from '../../data/machines'
-import { buildPitLevels, elevationForBenchName, headingY, pitWorldPosition } from '../../three/pitProfile'
+import { headingY } from '../../three/pitProfile'
+import { quarryMarkerPosition } from '../../three/quarryTerrain'
 import { MACHINE_GLB, MODEL_SIZE } from '../../three/modelCatalog'
 import FittedGltf from './FittedGltf'
 import MachineModel from './MachineModel'
 
 export default function MachineMarker3D({ machine, selected, operator, onSelect }) {
-  const levels = useMemo(() => buildPitLevels(), [])
-  const elevation = machine.elevation ?? elevationForBenchName(machine.bench)
   const targetPos = useMemo(
-    () => pitWorldPosition(machine.x, machine.y, elevation, levels),
-    [machine.x, machine.y, elevation, levels]
+    () => quarryMarkerPosition(machine.x, machine.y),
+    [machine.x, machine.y]
   )
 
   const spec = MACHINE_TYPES[machine.type]
   const path = TRACK_PATHS[spec?.path || 'bench']
   const waypoint = path[(machine.waypointIndex ?? 0) % path.length]
   const lookTarget = useMemo(
-    () => pitWorldPosition(waypoint.x, waypoint.y, elevation, levels),
-    [waypoint.x, waypoint.y, elevation, levels]
+    () => quarryMarkerPosition(waypoint.x, waypoint.y),
+    [waypoint.x, waypoint.y]
   )
 
   const groupRef = useRef()

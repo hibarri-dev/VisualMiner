@@ -1,5 +1,5 @@
 import { SITE, SITES_CATALOG, GEOFENCES, PORTS, WORKER_PERSONA } from './catalog'
-import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed, cycleForWaypoint, spacePitMachines } from './machines'
+import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed, cycleForWaypoint } from './machines'
 import { createPersonnel } from './personnel'
 import {
   createProduction,
@@ -129,11 +129,9 @@ export function tickMine(mine) {
     return next
   })
 
-  const spaced = spacePitMachines(machines)
-
   const personnel = mine.personnel.map(p => {
     if (p.assignedMachineId) {
-      const host = spaced.find(m => m.id === p.assignedMachineId)
+      const host = machines.find(m => m.id === p.assignedMachineId)
       if (host?.onMap) {
         return {
           ...p,
@@ -168,7 +166,7 @@ export function tickMine(mine) {
 
   const production = refreshNarrative({
     ...mine,
-    machines: spaced,
+    machines,
     production: {
       ...mine.production,
       extractionTph,
@@ -182,7 +180,7 @@ export function tickMine(mine) {
 
   const next = {
     ...mine,
-    machines: spaced,
+    machines,
     personnel,
     production,
     feeds,
