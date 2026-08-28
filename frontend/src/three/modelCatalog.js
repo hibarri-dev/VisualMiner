@@ -31,7 +31,7 @@ export const MODEL_SIZE = {
   drill: 0.28,
   water_truck: 0.32,
   fuel_truck: 0.32,
-  worker: 0.18
+  worker: 0.3
 }
 
 export const GLB_PRELOAD = [

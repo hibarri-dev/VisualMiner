@@ -49,18 +49,6 @@ function driveLabel(type) {
   return 'Hauling'
 }
 
-const SCATTER = [
-  [24, 28],
-  [50, 24],
-  [76, 30],
-  [22, 50],
-  [78, 52],
-  [26, 72],
-  [50, 76],
-  [74, 70],
-  [50, 50]
-]
-
 function pickInside(rng, x, y, id) {
   let best = { x: clampPad(x), y: clampPad(y) }
   for (let i = 0; i < 14; i += 1) {
@@ -76,7 +64,19 @@ function pickInside(rng, x, y, id) {
   return best
 }
 
-export default function MachineMarker3D({ machine, selected, operator, onSelect, slot = 0 }) {
+// Fully random starting spot anywhere in bounds, rejection-sampled against whatever
+// fleet positions already exist so machines don't spawn on top of each other.
+function pickHome(rng, id) {
+  let best = { x: clampPad(rng() * 100), y: clampPad(rng() * 100) }
+  for (let i = 0; i < 20; i += 1) {
+    const candidate = { x: clampPad(rng() * 100), y: clampPad(rng() * 100) }
+    if (!mapTooClose(id, candidate.x, candidate.y, 16)) return candidate
+    best = candidate
+  }
+  return best
+}
+
+export default function MachineMarker3D({ machine, selected, operator, onSelect }) {
   const spec = MACHINE_TYPES[machine.type]
   const size = MODEL_SIZE[machine.type] || 0.8
   const radius = Math.max(size * 0.9, 0.55)
@@ -85,9 +85,9 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect,
   const driveRef = useRef(null)
   if (!driveRef.current) {
     const rng = seedRng(machine.id)
-    const home = SCATTER[slot % SCATTER.length]
-    const x = clampPad(home[0] + (rng() - 0.5) * 8)
-    const y = clampPad(home[1] + (rng() - 0.5) * 8)
+    const home = pickHome(rng, machine.id)
+    const x = home.x
+    const y = home.y
     const startWork = rng() > 0.45
     const next = pickInside(rng, x, y, machine.id)
     driveRef.current = {
@@ -211,16 +211,16 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect,
         </mesh>
       )}
       {selected && (
-        <Html position={[0, 0.95, 0]} center zIndexRange={[10, 0]} distanceFactor={9}>
-          <div className="w-52 p-3.5 rounded-2xl bg-[#282b36] text-slate-200 shadow-2xl border border-[#3b4050] font-sans pointer-events-auto select-text">
-            <div className="font-bold text-[14px] text-white tracking-tight">{machine.id}</div>
-            <div className="mt-1 space-y-0.5 text-[12px] text-slate-300 font-medium">
-              <div>{machine.name || spec?.label || machine.type}</div>
-              <div>Fuel Tank: {Math.round(machine.fuelPercent)}%</div>
+        <Html position={[0, 0.95, 0]} center zIndexRange={[10, 0]}>
+          <div className="w-36 p-2 rounded-lg bg-[#282b36] text-slate-200 shadow-xl border border-[#3b4050] font-sans pointer-events-auto select-text">
+            <div className="font-bold text-[10px] text-white tracking-tight leading-tight">{machine.id}</div>
+            <div className="mt-0.5 space-y-0.5 text-[9px] leading-snug text-slate-300 font-medium">
+              <div className="truncate">{machine.name || spec?.label || machine.type}</div>
+              <div>Fuel: {Math.round(machine.fuelPercent)}%</div>
               <div>Payload: {machine.payloadKg}kg</div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <span
-                  className="inline-block w-1.5 h-1.5 rounded-full"
+                  className="inline-block w-1 h-1 rounded-full shrink-0"
                   style={{
                     background:
                       shownStatus === 'Breakdown'
@@ -232,8 +232,8 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect,
                 />
                 {shownStatus}
               </div>
-              {machine.trackerId && <div className="text-slate-500 font-mono text-[11px]">{machine.trackerId}</div>}
-              {operator && <div className="text-slate-500 font-normal">{operator.name}</div>}
+              {machine.trackerId && <div className="text-slate-500 font-mono text-[8px] truncate">{machine.trackerId}</div>}
+              {operator && <div className="text-slate-500 font-normal truncate">{operator.name}</div>}
             </div>
           </div>
         </Html>

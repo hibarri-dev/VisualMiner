@@ -62,7 +62,7 @@ export default function MapsView({ currentRole }) {
       <div className="relative flex-1 min-h-[300px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl select-none">
         <div className="absolute left-4 top-3 z-20 flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Personnel monitoring</span>
-          <StatusBadge value={`${mapPeople.length} tagged`} />
+          <StatusBadge value={`${Math.min(mapPeople.length, 14)} tagged`} />
         </div>
         <Scene3D
           cameraPosition={[-4.8, 7.1, 10.2]}
@@ -75,10 +75,11 @@ export default function MapsView({ currentRole }) {
           onPointerMissed={() => setSelectedPersonId(null)}
         >
           <QuarryGltf3D />
-          {mapPeople.map(person => (
+          {mapPeople.slice(0, 14).map((person, i) => (
             <PersonMarker3D
               key={person.id}
               person={person}
+              slot={i}
               selected={person.id === selectedPersonId}
               onSelect={setSelectedPersonId}
             />
