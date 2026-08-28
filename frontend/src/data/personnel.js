@@ -24,8 +24,8 @@ export const FEATURED_PERSONNEL = [
     zone: 'Bench 4 North',
     status: 'on_shift',
     shift: 'B',
-    x: 26,
-    y: 12,
+    x: 28,
+    y: 36,
     onMap: true,
     featured: true
   },
@@ -88,11 +88,17 @@ const ZONES = [
 ]
 
 const MAP_PEOPLE = [
-  { x: 75, y: 85 },
-  { x: 38, y: 52 },
-  { x: 55, y: 38 },
-  { x: 22, y: 62 },
-  { x: 70, y: 28 }
+  { x: 26, y: 32 },
+  { x: 44, y: 28 },
+  { x: 62, y: 30 },
+  { x: 74, y: 46 },
+  { x: 28, y: 52 },
+  { x: 50, y: 48 },
+  { x: 70, y: 58 },
+  { x: 34, y: 68 },
+  { x: 52, y: 72 },
+  { x: 68, y: 74 },
+  { x: 40, y: 40 }
 ]
 
 export function createPersonnel(machines) {
@@ -127,7 +133,7 @@ export function createPersonnel(machines) {
 
       const isOperator = plan.roleGroup === 'operators'
       const machineId = isOperator && freeMachineIds.length ? freeMachineIds.shift() : null
-      const onMap = mapIdx < MAP_PEOPLE.length && rng() > 0.55
+      const onMap = mapIdx < MAP_PEOPLE.length
       const slot = onMap ? MAP_PEOPLE[mapIdx++] : null
 
       people.push({

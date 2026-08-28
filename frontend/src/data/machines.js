@@ -70,28 +70,29 @@ export const MACHINE_TYPE_LIST = Object.entries(MACHINE_TYPES).map(([id, spec]) 
 
 export const TRACK_PATHS = {
   haul: [
-    { x: 19, y: 80, elevation: 900 },
-    { x: 28, y: 48, elevation: 840 },
-    { x: 31, y: 24, elevation: 760 },
-    { x: 52, y: 18, elevation: 755 },
-    { x: 72, y: 40, elevation: 820 },
-    { x: 78, y: 72, elevation: 890 },
-    { x: 64, y: 82, elevation: 920 },
-    { x: 40, y: 78, elevation: 910 }
+    { x: 24, y: 62, elevation: 900 },
+    { x: 32, y: 38, elevation: 840 },
+    { x: 48, y: 26, elevation: 760 },
+    { x: 68, y: 34, elevation: 755 },
+    { x: 76, y: 52, elevation: 820 },
+    { x: 70, y: 72, elevation: 890 },
+    { x: 46, y: 76, elevation: 910 },
+    { x: 28, y: 68, elevation: 905 }
   ],
   bench: [
-    { x: 38, y: 44, elevation: 760 },
+    { x: 34, y: 44, elevation: 760 },
     { x: 50, y: 32, elevation: 770 },
-    { x: 62, y: 46, elevation: 755 },
-    { x: 52, y: 60, elevation: 760 },
-    { x: 40, y: 56, elevation: 765 }
+    { x: 66, y: 46, elevation: 755 },
+    { x: 58, y: 64, elevation: 760 },
+    { x: 38, y: 62, elevation: 765 }
   ],
   rim: [
-    { x: 16, y: 28, elevation: 900 },
-    { x: 50, y: 12, elevation: 910 },
-    { x: 84, y: 26, elevation: 900 },
-    { x: 76, y: 52, elevation: 890 },
-    { x: 24, y: 50, elevation: 900 }
+    { x: 22, y: 36, elevation: 900 },
+    { x: 50, y: 22, elevation: 910 },
+    { x: 78, y: 38, elevation: 900 },
+    { x: 74, y: 68, elevation: 890 },
+    { x: 48, y: 78, elevation: 900 },
+    { x: 24, y: 64, elevation: 900 }
   ]
 }
 
@@ -131,15 +132,15 @@ export const FEATURED_MACHINES = [
     status: 'Dumping',
     bench: 'Bench 1 Rim',
     zone: 'ROM Pad',
-    x: 82,
-    y: 28,
+    x: 58,
+    y: 52,
     elevation: 920,
     onMap: true,
     featured: true,
     tracked: true,
     trackerId: 'GPS-X7UIH53',
     waypointIndex: 5,
-    speed: 2.4
+    speed: 7.4
   },
   {
     id: 'XYTH67',
@@ -151,15 +152,15 @@ export const FEATURED_MACHINES = [
     status: 'Loading',
     bench: 'Bench 4 North',
     zone: 'Bench 4 North',
-    x: 22,
-    y: 58,
+    x: 46,
+    y: 50,
     onMap: true,
     featured: true,
     tracked: true,
     trackerId: 'GPS-XYTH67',
     waypointIndex: 0,
     elevation: 760,
-    speed: 0.9
+    speed: 2.9
   },
   {
     id: 'K4MPL22',
@@ -171,15 +172,15 @@ export const FEATURED_MACHINES = [
     status: 'Hauling',
     bench: 'Bench 4 South',
     zone: 'Haul Road 2',
-    x: 48,
-    y: 88,
+    x: 52,
+    y: 56,
     onMap: true,
     featured: true,
     tracked: true,
     trackerId: 'GPS-K4MPL22',
     waypointIndex: 0,
     elevation: 900,
-    speed: 2.6
+    speed: 7.8
   }
 ]
 
@@ -213,9 +214,9 @@ export function spacePitMachines(machines) {
 }
 
 export function pathSpeed(path) {
-  if (path === 'haul') return 2.4
-  if (path === 'rim') return 1.3
-  return 0.95
+  if (path === 'haul') return 5.2
+  if (path === 'rim') return 4.1
+  return 3.2
 }
 
 export function stepAlongPath(m) {
@@ -228,9 +229,7 @@ export function stepAlongPath(m) {
 
   const idx = m.waypointIndex ?? 0
   const target = path[idx % path.length]
-  const parked = m.status === 'Dumping' || m.status === 'Loading' || m.status === 'Digging' || m.status === 'Drilling'
-  let speed = m.speed || pathSpeed(spec?.path)
-  if (parked) speed *= 0.14
+  const speed = m.speed || pathSpeed(spec?.path)
 
   const dx = target.x - m.x
   const dy = target.y - m.y
@@ -329,7 +328,7 @@ export function createMachines() {
     }
   })
 
-  return spacePitMachines(machines)
+  return machines
 }
 
 export function machineGroup(type) {

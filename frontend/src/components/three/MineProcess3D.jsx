@@ -41,7 +41,7 @@ function HaulRamp() {
   return (
     <instancedMesh ref={ref} args={[null, null, count]}>
       <boxGeometry args={[1, 0.025, 1]} />
-      <meshStandardMaterial color="#67e8f9" roughness={0.35} metalness={0.25} emissive="#155e75" emissiveIntensity={0.4} />
+      <meshStandardMaterial color="#8a7a66" roughness={0.95} metalness={0.04} />
     </instancedMesh>
   )
 }
