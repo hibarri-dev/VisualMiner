@@ -18,9 +18,36 @@ import {
   createLabTests,
   createWeighbridge,
   createCommunities,
+  createSurveyTargets,
   buildDailyInsights
 } from './cycle'
 import { clamp, mulberry32, randInt, uniqueCode } from './rng'
+
+const REPORT_FEED_SYNC = {
+  geological: 'Micromine, Laboratory Assay System (LIMS)',
+  maintenance: 'CMMS Maintenance, SCADA Telemetry',
+  blast: 'Deswik Mine Planning',
+  safety: 'SAP HR / EHS',
+  engineering: 'Hexagon Mining',
+  sops: 'Document management',
+  permits: 'ArcGIS Geospatial',
+  environmental: 'ArcGIS Geospatial, Drone LiDAR',
+  inspection: 'CMMS / EHS',
+  contractor: 'SAP ERP'
+}
+
+const REPORT_SOURCE = {
+  geological: 'Micromine + LIMS',
+  maintenance: 'CMMS Maintenance',
+  blast: 'Deswik Mine Planning',
+  safety: 'SAP HR / EHS',
+  engineering: 'Hexagon Mining',
+  sops: 'Document management',
+  permits: 'ArcGIS Geospatial',
+  environmental: 'ArcGIS Geospatial',
+  inspection: 'CMMS / EHS',
+  contractor: 'SAP ERP'
+}
 
 export function createMineState() {
   const machines = createMachines()
@@ -46,6 +73,7 @@ export function createMineState() {
     labTests: createLabTests(),
     weighbridge: createWeighbridge(),
     communities: createCommunities(),
+    surveyTargets: createSurveyTargets(),
     insights: [],
     lastTickAt: Date.now()
   }
@@ -199,7 +227,7 @@ export function ingestSiteReport(mine, submission) {
     type,
     title: title || `${type} report`,
     summary: notes || `Ingested ${type} report. Model recalibrated against live telemetry.`,
-    source: 'Site Report ingest',
+    source: REPORT_SOURCE[type] || 'Site Report ingest',
     status: 'ai_updated',
     yieldHint: null,
     zone: 'Bench 4 North',
@@ -219,16 +247,40 @@ export function ingestSiteReport(mine, submission) {
     const predictedTpd = Math.round(mine.production.predictedTpd * 1.032)
     const weekTrendPercent = Math.round((mine.production.weekTrendPercent + 3.2) * 10) / 10
     predictedYieldChange = '+3.2%'
-    geofenceAffected = 'Bench 4 North'
-    summary = `Geological yield model updated with +3.2% efficiency adjustment. Predicted day output ${predictedTpd} t.`
+    geofenceAffected = 'QZ-1 Quartz Lode'
+    summary = `Geological + LIMS ingest. Lab row added. Hospet skipped tests attached if they were empty. Predicted day output ${predictedTpd} t.`
     report.yieldHint = '+3.2%'
+    const lab = {
+      id: `lab-${Date.now()}`,
+      siteId: 'kolar-north',
+      sample: title || 'Ingested channel sample',
+      result: (notes || 'Assay ingested — model +3.2%').slice(0, 80),
+      stage: 'prospecting',
+      status: 'cleared',
+      at
+    }
     next = {
       ...next,
       production: {
         ...next.production,
         predictedTpd,
         weekTrendPercent
-      }
+      },
+      labTests: [lab, ...(next.labTests || [])],
+      sites: (next.sites || []).map(s =>
+        s.id === 'hospet-crushing-hub' && !s.testResults?.hasData
+          ? {
+              ...s,
+              testResults: {
+                ...s.testResults,
+                hasData: true,
+                lithology: 'Attached from laboratory / Micromine ingest',
+                assayGrade: notes || 'Ingested via Site Report',
+                lastSurveyDate: now.toISOString().slice(0, 10)
+              }
+            }
+          : s
+      )
     }
   } else if (type === 'maintenance') {
     geofenceAffected = 'Crusher X17 Exclusion'
@@ -265,13 +317,19 @@ export function ingestSiteReport(mine, submission) {
     }
   } else if (type === 'blast') {
     geofenceAffected = 'Bench 3 East Blast Radius'
-    summary = 'Blast report synced. Exclusion geofence remains armed for tomorrow 14:00.'
+    summary = 'Blast report synced from Deswik. Exclusion geofence remains armed for tomorrow 14:00.'
   } else if (type === 'safety') {
     geofenceAffected = 'Crusher X17 Exclusion'
     summary = 'Safety report logged. L2 clearance broadcast retained on the pit map.'
   } else if (type === 'environmental') {
     geofenceAffected = 'Bench 1 Rim'
-    summary = 'Environmental sensors ingested. Dust cart already on Bench 1 — no production change.'
+    summary = 'Environmental sensors ingested via ArcGIS. Dust cart already on Bench 1 — no production change.'
+  } else if (type === 'permits') {
+    geofenceAffected = 'Robertsonpet / ML boundary'
+    summary = 'Permit layer synced from ArcGIS. Community job register still short (38 / 60).'
+  } else if (type === 'engineering') {
+    geofenceAffected = 'Haul Road 2'
+    summary = 'Hexagon machine-guidance overlay refreshed. Haul spiral R12 remains the live design.'
   } else {
     summary = `AI has analyzed the ${type} report. Geological yield model held; telemetry overlay refreshed.`
   }
@@ -289,7 +347,7 @@ export function ingestSiteReport(mine, submission) {
       predictedYieldChange,
       geofenceAffected,
       timestamp: at,
-      syncedFeeds: 'CAT Fleet, Deswik, Micromine'
+      syncedFeeds: REPORT_FEED_SYNC[type] || 'CAT Fleet, Deswik, Micromine'
     }
   }
 }
@@ -397,17 +455,83 @@ export function buildSearchIndex(mine) {
     subtitle: r.summary,
     tag: 'Site Report'
   }))
+  const sites = (mine.sites || []).map(s => ({
+    type: 'site',
+    id: s.id,
+    title: s.name,
+    subtitle: `${s.stageLabel} · ${s.commodity} · ${s.location}`,
+    tag: s.stageLabel
+  }))
+  const oreBodies = (mine.oreBodies || []).map(b => ({
+    type: 'ore',
+    id: b.id,
+    siteId: b.siteId,
+    title: b.name,
+    subtitle: `${b.commodity} · ${b.headGrade}`,
+    tag: b.status
+  }))
+  const stockpiles = (mine.stockpiles || []).map(s => ({
+    type: 'pile',
+    id: s.id,
+    siteId: s.siteId,
+    title: s.name,
+    subtitle: `${s.tons} t · ${s.gradeLabel || 'ungraded'}`,
+    tag: s.status
+  }))
+  const handovers = (mine.handovers || []).map(h => ({
+    type: 'handover',
+    id: h.id,
+    title: `Shift ${h.fromShift} → ${h.toShift}`,
+    subtitle: h.notes,
+    tag: h.status
+  }))
+  const labs = (mine.labTests || []).map(t => ({
+    type: 'lab',
+    id: t.id,
+    siteId: t.siteId,
+    title: t.sample,
+    subtitle: t.result,
+    tag: t.status
+  }))
+  const villages = (mine.communities || []).map(c => ({
+    type: 'community',
+    id: c.id,
+    siteId: c.siteId,
+    title: c.village,
+    subtitle: `Jobs ${c.jobsFilled}/${c.jobsPromised} · ${c.royaltyDueInr}`,
+    tag: c.sentiment
+  }))
+  const targets = (mine.surveyTargets || []).map(t => ({
+    type: 'target',
+    id: t.id,
+    siteId: t.siteId,
+    title: t.name,
+    subtitle: t.note,
+    tag: t.status
+  }))
 
   const featured = [
     machines.find(m => m.id === 'X7UIH53'),
     people.find(p => p.id === 'arvind-chopra'),
     plants.find(p => p.id === 'X17'),
-    reports.find(r => r.id === 'rep-assay-204')
+    reports.find(r => r.id === 'rep-assay-204'),
+    oreBodies.find(b => b.id === 'qz-1'),
+    stockpiles.find(s => s.id === 'sp-conc-42')
   ].filter(Boolean)
 
-  const rest = [...machines, ...people, ...plants, ...reports].filter(
-    item => !featured.some(f => f.type === item.type && f.id === item.id)
-  )
+  const rest = [
+    ...machines,
+    ...people,
+    ...plants,
+    ...reports,
+    ...sites,
+    ...oreBodies,
+    ...stockpiles,
+    ...handovers,
+    ...labs,
+    ...villages,
+    ...targets
+  ].filter(item => !featured.some(f => f.type === item.type && f.id === item.id))
   return [...featured, ...rest]
 }
 

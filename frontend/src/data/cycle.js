@@ -108,9 +108,18 @@ export function createLabTests() {
     { id: 'lab-ch-16', siteId: 'bellary-conc-lab', sample: 'Conc 50% pile', result: '50.2% Cr2O3', stage: 'testing', status: 'cleared', at: '09:04' },
     { id: 'lab-ch-17', siteId: 'bellary-conc-lab', sample: 'Conc 60% pile', result: 'no tonnes on pad', stage: 'testing', status: 'watch', at: '09:05' },
     { id: 'lab-cde', siteId: 'chitradurga-prospect', sample: 'Hole CD-18', result: '1.85% Cu, 0.22% Co', stage: 'prospecting', status: 'feasibility', at: 'Today' },
+    { id: 'lab-anth-1', siteId: 'talcher-anthracite', sample: 'Seam A ROM (sold raw)', result: 'Fixed carbon 86% — no concentrate plant', stage: 'testing', status: 'cleared', at: '08:15' },
     { id: 'lab-nfg-dome', siteId: 'queensway-nfg', sample: 'NFGC-24-2158 Golden Dome', result: '343 g/t Au over 2.15 m', stage: 'prospecting', status: 'cleared', at: '2024-10-31' },
     { id: 'lab-nfg-ksd', siteId: 'queensway-nfg', sample: 'NFGC-24-2112-W5 Keats South Deep', result: '10.3 g/t Au over 8.20 m', stage: 'prospecting', status: 'cleared', at: '2025-04-29' },
     { id: 'lab-nfg-seismic', siteId: 'queensway-nfg', sample: 'NFGC-24-2094 Deep Seismic Target', result: '1.50 g/t Au over 7.00 m', stage: 'prospecting', status: 'cleared', at: '2024-07-11' }
+  ]
+}
+
+export function createSurveyTargets() {
+  return [
+    { id: 'tgt-a', siteId: 'kolar-survey-grid', name: 'Anomaly A — west mag high', method: 'Drone LiDAR + ground mag', status: 'follow_up', note: 'No core yet. Surveying only.' },
+    { id: 'tgt-b', siteId: 'kolar-survey-grid', name: 'Anomaly B — quartz ridge', method: 'Photogrammetry', status: 'watch', note: 'Possible QZ-1 strike extension.' },
+    { id: 'tgt-c', siteId: 'kolar-survey-grid', name: 'Anomaly C — low mag', method: 'Drone LiDAR', status: 'deprioritised', note: 'Likely barren. Do not drill first.' }
   ]
 }
 
@@ -126,7 +135,8 @@ export function createCommunities() {
   return [
     { id: 'com-kolar', siteId: 'kolar-north', village: 'Robertsonpet', households: 420, jobsPromised: 60, jobsFilled: 38, royaltyDueInr: '12.4 L this month', sentiment: 'watch' },
     { id: 'com-bellary', siteId: 'bellary-chrome', village: 'Sandur fringe', households: 180, jobsPromised: 22, jobsFilled: 22, royaltyDueInr: 'paid', sentiment: 'ok' },
-    { id: 'com-license', siteId: 'kolar-ml-renewal', village: 'Robertsonpet', households: 420, jobsPromised: 60, jobsFilled: 38, royaltyDueInr: '12.4 L this month', sentiment: 'watch' }
+    { id: 'com-license', siteId: 'kolar-ml-renewal', village: 'Robertsonpet', households: 420, jobsPromised: 60, jobsFilled: 38, royaltyDueInr: '12.4 L this month', sentiment: 'watch' },
+    { id: 'com-void', siteId: 'kolar-old-void', village: 'Robertsonpet close-out', households: 420, jobsPromised: 8, jobsFilled: 8, royaltyDueInr: 'rehab stipend', sentiment: 'ok' }
   ]
 }
 

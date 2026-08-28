@@ -55,6 +55,18 @@ export default function OpsView({ activeTab, currentRole }) {
         />
       </div>
 
+      {activeTab === 'production' && (mine.alerts || []).length > 0 && (
+        <DataTable
+          columns={[
+            { key: 'title', label: 'Alert' },
+            { key: 'detail', label: 'Detail' },
+            { key: 'source', label: 'Feed' },
+            { key: 'severity', label: 'Severity', render: r => <StatusBadge value={r.severity} /> }
+          ]}
+          rows={mine.alerts}
+        />
+      )}
+
       {(activeTab === 'processing' || activeTab === 'production') && (
         <DataTable
           columns={[

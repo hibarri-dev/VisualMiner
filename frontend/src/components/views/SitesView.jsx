@@ -17,16 +17,15 @@ import { SITE_STAGES } from '../../data'
 import ViewFrame from './ViewFrame'
 
 export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
-  const { mine } = useVisibleMine(currentRole)
-  const [selectedSiteId, setSelectedSiteId] = useState('kolar-north')
+  const { mine, selectedSiteId, setSelectedSiteId } = useVisibleMine(currentRole)
   const [stageFilter, setStageFilter] = useState('all')
 
   useEffect(() => {
     if (typeof activeSubTab === 'string' && activeSubTab.startsWith('site-')) {
       const id = activeSubTab.slice('site-'.length)
-      if (mine.sites?.some(s => s.id === id)) setSelectedSiteId(id)
+      if (mine.sites?.some(s => s.id === id) && setSelectedSiteId) setSelectedSiteId(id)
     }
-  }, [activeSubTab, mine.sites])
+  }, [activeSubTab, mine.sites, setSelectedSiteId])
 
   const sites = mine.sites || []
 
@@ -124,7 +123,7 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
               return (
                 <div
                   key={site.id}
-                  onClick={() => setSelectedSiteId(site.id)}
+                  onClick={() => setSelectedSiteId && setSelectedSiteId(site.id)}
                   className={`p-3.5 rounded-xl transition cursor-pointer my-1 ${
                     isSelected
                       ? 'bg-[#1f2330] border border-indigo-500/50 shadow-md'
@@ -300,6 +299,18 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
                   </div>
                 )}
               </div>
+
+              {(mine.surveyTargets || []).filter(t => t.siteId === selectedSite.id).length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Survey targets</h4>
+                  {(mine.surveyTargets || []).filter(t => t.siteId === selectedSite.id).map(t => (
+                    <div key={t.id} className="text-[11px] text-slate-300 px-2 py-1.5 rounded bg-[#191b24] border border-[#272b3b]">
+                      {t.name} · {t.method}
+                      <div className="text-[10px] text-slate-500 mt-0.5">{t.note}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {(mine.oreBodies || []).filter(b => b.siteId === selectedSite.id).length > 0 && (
                 <div className="space-y-1.5">

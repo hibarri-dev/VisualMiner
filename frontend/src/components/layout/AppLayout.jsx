@@ -35,6 +35,15 @@ export default function AppLayout({ children }) {
       setActiveTab('site-reports')
     } else if (result.type === 'zone') {
       setActiveTab('processing')
+    } else if (result.type === 'site' || result.type === 'ore' || result.type === 'community' || result.type === 'target') {
+      setActiveTab('sites')
+      setActiveSubTab(`site-${result.siteId || result.id}`)
+    } else if (result.type === 'pile') {
+      setActiveTab('collections')
+    } else if (result.type === 'lab') {
+      setActiveTab('processing')
+    } else if (result.type === 'handover') {
+      setActiveTab('schedule')
     }
   }
 

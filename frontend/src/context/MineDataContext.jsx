@@ -17,6 +17,7 @@ export function MineDataProvider({ children }) {
   const [selectedMachineId, setSelectedMachineId] = useState(null)
   const [selectedPersonId, setSelectedPersonId] = useState(null)
   const [selectedReportId, setSelectedReportId] = useState('rep-assay-204')
+  const [selectedSiteId, setSelectedSiteId] = useState('kolar-north')
   const mineRef = useRef(mine)
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export function MineDataProvider({ children }) {
   const addSite = useCallback(payload => {
     const result = addSiteToMine(mineRef.current, payload)
     setMine(result.mine)
+    setSelectedSiteId(result.site.id)
     return result.site
   }, [])
 
@@ -64,6 +66,8 @@ export function MineDataProvider({ children }) {
     if (result.type === 'machine') setSelectedMachineId(result.id)
     if (result.type === 'worker') setSelectedPersonId(result.id)
     if (result.type === 'report') setSelectedReportId(result.id)
+    if (result.type === 'site') setSelectedSiteId(result.id)
+    if (result.siteId) setSelectedSiteId(result.siteId)
   }, [])
 
   const stats = useMemo(() => liveStats(mine), [mine])
@@ -77,9 +81,11 @@ export function MineDataProvider({ children }) {
       selectedMachineId,
       selectedPersonId,
       selectedReportId,
+      selectedSiteId,
       setSelectedMachineId,
       setSelectedPersonId,
       setSelectedReportId,
+      setSelectedSiteId,
       ingestReport,
       addMachine,
       addPerson,
@@ -94,6 +100,7 @@ export function MineDataProvider({ children }) {
       selectedMachineId,
       selectedPersonId,
       selectedReportId,
+      selectedSiteId,
       ingestReport,
       addMachine,
       addPerson,
