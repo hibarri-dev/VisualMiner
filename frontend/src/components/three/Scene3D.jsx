@@ -14,12 +14,15 @@ export default function Scene3D({
   fogFar = 34,
   controlsTarget = [0, -0.85, 0],
   variant = 'daylight',
+  maxPolarAngle = Math.PI / 2.05,
+  palette = 'pit',
   onPointerMissed
 }) {
   // The LiDAR view is unlit by design — the point cloud and thermal shaders carry
   // their own colour, so scene lighting would only wash the false-colour ramp out.
   const lidar = variant === 'lidar'
-  const bg = lidar ? LIDAR_BG : '#1c1814'
+  const geology = palette === 'geology'
+  const bg = lidar ? LIDAR_BG : geology ? '#07090f' : '#1c1814'
 
   return (
     <div className="absolute inset-0" style={{ background: bg }}>
@@ -35,6 +38,13 @@ export default function Scene3D({
         <fog attach="fog" args={[lidar ? LIDAR_BG : fogColor, fogNear, lidar ? fogFar * 1.6 : fogFar]} />
         {lidar ? (
           <ambientLight intensity={1} />
+        ) : geology ? (
+          <>
+            <hemisphereLight args={['#c7d2fe', '#0b1220', 0.55]} />
+            <ambientLight intensity={0.38} />
+            <directionalLight position={sunPosition} intensity={1.15} color="#e0e7ff" />
+            <directionalLight position={[-6, 4, -4]} intensity={0.35} color="#67e8f9" />
+          </>
         ) : (
           <>
             <hemisphereLight args={['#f3e6d2', '#3a3228', 0.72]} />
@@ -49,7 +59,7 @@ export default function Scene3D({
           dampingFactor={0.08}
           minDistance={minDistance}
           maxDistance={maxDistance}
-          maxPolarAngle={Math.PI / 2.05}
+          maxPolarAngle={maxPolarAngle}
           target={controlsTarget}
         />
       </Canvas>

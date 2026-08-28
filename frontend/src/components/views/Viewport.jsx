@@ -1,5 +1,6 @@
 import React from 'react'
 import MapsView from './MapsView'
+import OreBodyView from './OreBodyView'
 import SitesView from './SitesView'
 import FleetView from './FleetView'
 import HumansView from './HumansView'
@@ -21,7 +22,7 @@ export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenM
       return <FeedsView currentRole={currentRole} />
     }
     if (activeSubTab === 'mines-geofence') return <GeofenceView currentRole={currentRole} />
-    return <MapsView currentRole={currentRole} />
+    return <OreBodyView />
   }
 
   if (activeTab === 'machines') {
