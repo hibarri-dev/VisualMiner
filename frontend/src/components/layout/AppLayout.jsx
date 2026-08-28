@@ -6,6 +6,7 @@ import Viewport from '../views/Viewport'
 import SubmitReportModal from '../modals/SubmitReportModal'
 import AddMachineModal from '../modals/AddMachineModal'
 import AddPersonModal from '../modals/AddPersonModal'
+import RegisterSiteModal from '../modals/RegisterSiteModal'
 import { useMineData } from '../../context/useMineData'
 
 export default function AppLayout({ children }) {
@@ -76,6 +77,7 @@ export default function AppLayout({ children }) {
         onTracked={() => setActiveTab('maps')}
       />
       <AddPersonModal isOpen={activeModal === 'add-person'} onClose={handleCloseModal} />
+      <RegisterSiteModal isOpen={activeModal === 'register-site'} onClose={handleCloseModal} />
     </div>
   )
 }

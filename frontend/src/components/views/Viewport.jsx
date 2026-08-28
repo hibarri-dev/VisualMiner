@@ -1,5 +1,6 @@
 import React from 'react'
 import MapsView from './MapsView'
+import SitesView from './SitesView'
 import FleetView from './FleetView'
 import HumansView from './HumansView'
 import OpsView from './OpsView'
@@ -9,6 +10,10 @@ import FeedsView, { GeofenceView, ScheduleView, MessagesView, PortsView } from '
 export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenModal }) {
   if (activeTab === 'maps') {
     return <MapsView currentRole={currentRole} />
+  }
+
+  if (activeTab === 'sites') {
+    return <SitesView currentRole={currentRole} onOpenModal={onOpenModal} />
   }
 
   if (activeTab === 'mines') {
