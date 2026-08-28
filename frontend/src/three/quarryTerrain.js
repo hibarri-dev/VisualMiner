@@ -99,6 +99,19 @@ export function clampToQuarry(x, z) {
   return snapToLand(x, z)
 }
 
+// True when (x, z) falls on a scanned cell rather than the empty space around the
+// tile. Used to keep generated overlays (point clouds, markers) on real terrain.
+export function isQuarryLand(x, z) {
+  return cover[cellOf(x, z)] === '1'
+}
+
+export const quarryExtent = {
+  halfW: QUARRY_HALF_W,
+  halfD: QUARRY_HALF_D,
+  cols,
+  rows
+}
+
 const MAX_TILT = 0.42 // ~24deg; the height grid is coarser than the mesh, so raw
 // gradients near cliff edges would otherwise lay a vehicle on its side.
 

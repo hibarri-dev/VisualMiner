@@ -46,7 +46,10 @@ export default function ThermalGltf({ url, size = 0.4, selected = false }) {
     const dim = box.getSize(new THREE.Vector3())
     const max = Math.max(dim.x, dim.y, dim.z) || 1
     const scale = size / max
-    return { clone, scale, y: -box.min.y * scale }
+    // Same forward-axis correction as FittedGltf: yaw assumes forward is +Z, so a
+    // model authored along X needs a quarter turn or it travels sideways.
+    const yaw = dim.x > dim.z ? Math.PI / 2 : 0
+    return { clone, scale, y: -box.min.y * scale, yaw }
   }, [scene, size])
 
   useFrame(state => {
@@ -56,7 +59,7 @@ export default function ThermalGltf({ url, size = 0.4, selected = false }) {
   const scale = selected ? fitted.scale * 1.22 : fitted.scale
 
   return (
-    <group position={[0, fitted.y, 0]}>
+    <group position={[0, fitted.y, 0]} rotation={[0, fitted.yaw, 0]}>
       <group scale={scale}>
         <primitive object={fitted.clone} />
       </group>
