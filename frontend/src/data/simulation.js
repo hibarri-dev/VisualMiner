@@ -1,5 +1,5 @@
 import { SITE, SITES_CATALOG, GEOFENCES, PORTS, WORKER_PERSONA } from './catalog'
-import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed } from './machines'
+import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed, cycleForWaypoint, spacePitMachines } from './machines'
 import { createPersonnel } from './personnel'
 import {
   createProduction,
@@ -101,26 +101,39 @@ export function tickMine(mine) {
     }
 
     const nextFuel = clamp(m.fuelPercent - rng() * 0.35, 8, 100)
-    const payloadDelta = spec?.payloadKg ? Math.round((rng() - 0.45) * 1200) : 0
+    const cycle = cycleForWaypoint(m.type, next.waypointIndex)
+    let payloadKg = next.payloadKg
+    const specPayload = spec?.payloadKg || 0
+    if (specPayload && cycle.status) {
+      if (cycle.status === 'Loading') payloadKg = specPayload
+      else if (cycle.status === 'Dumping') payloadKg = Math.round(specPayload * 0.07)
+      else if (cycle.status === 'Queued') payloadKg = 0
+      else if (cycle.status === 'Hauling') {
+        const idx = next.waypointIndex ?? 0
+        payloadKg = idx === 4 || idx === 5 ? specPayload : idx <= 1 ? 0 : payloadKg
+      }
+    }
+
     next = {
       ...next,
       fuelPercent: Math.round(nextFuel * 10) / 10,
-      payloadKg: spec?.payloadKg
-        ? Math.round(clamp((m.payloadKg || 0) + payloadDelta, 0, spec.payloadKg))
-        : 0
+      payloadKg: specPayload ? Math.round(clamp(payloadKg, 0, specPayload)) : 0,
+      status: cycle.status || next.status,
+      zone: cycle.zone || next.zone
     }
 
     if (m.id === 'X7UIH53') {
       next.fuelPercent = Math.round(clamp(next.fuelPercent, 84, 90) * 10) / 10
-      next.payloadKg = Math.round(clamp(next.payloadKg || 6700, 6500, 6900))
     }
 
     return next
   })
 
+  const spaced = spacePitMachines(machines)
+
   const personnel = mine.personnel.map(p => {
     if (p.assignedMachineId) {
-      const host = machines.find(m => m.id === p.assignedMachineId)
+      const host = spaced.find(m => m.id === p.assignedMachineId)
       if (host?.onMap) {
         return {
           ...p,
@@ -155,7 +168,7 @@ export function tickMine(mine) {
 
   const production = refreshNarrative({
     ...mine,
-    machines,
+    machines: spaced,
     production: {
       ...mine.production,
       extractionTph,
@@ -169,7 +182,7 @@ export function tickMine(mine) {
 
   const next = {
     ...mine,
-    machines,
+    machines: spaced,
     personnel,
     production,
     feeds,
@@ -308,6 +321,7 @@ export function addMachineToMine(mine, payload) {
     zone: payload.zone || MACHINE_ZONES[0],
     x: start.x,
     y: start.y,
+    elevation: start.elevation,
     onMap: true,
     featured: false,
     tracked: payload.trackLive !== false,

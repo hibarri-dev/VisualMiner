@@ -1,56 +1,105 @@
-import React, { useMemo, useCallback } from 'react'
+import React, { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { LatheGeometry, Vector2 } from 'three'
-import { buildPitLevels, elevationToY, depthColor, PIT_GROUND_RADIUS } from '../../three/pitProfile'
-import TerrainDressing from './TerrainDressing'
+import { buildPitLevels, elevationToY, depthColor, PIT_GROUND_RADIUS, PIT_RADIUS } from '../../three/pitProfile'
 
 function buildGeometry() {
   const levels = buildPitLevels()
-  const points = [new Vector2(PIT_GROUND_RADIUS, 0)]
+  const points = [new Vector2(PIT_GROUND_RADIUS, 0.04)]
 
   levels.forEach((level, i) => {
     const y = elevationToY(level.elevation)
-    points.push(new Vector2(level.radius, y))
     const next = levels[i + 1]
+    points.push(new Vector2(level.radius, y))
     if (next) points.push(new Vector2(next.radius, y))
   })
   points.push(new Vector2(0, points[points.length - 1].y))
 
-  const geometry = new LatheGeometry(points, 96)
-  geometry.computeVertexNormals()
-
+  const geometry = new LatheGeometry(points, 72)
   const position = geometry.attributes.position
   const minY = elevationToY(levels[levels.length - 1].elevation)
   const maxY = elevationToY(levels[0].elevation)
+  const span = maxY - minY || 1
   const colors = new Float32Array(position.count * 3)
+
+  const levelYs = levels.map(l => elevationToY(l.elevation))
   for (let i = 0; i < position.count; i += 1) {
+    const x = position.getX(i)
     const y = position.getY(i)
-    const t = (y - minY) / (maxY - minY || 1)
+    const z = position.getZ(i)
+    const r = Math.hypot(x, z)
+    const onBench = levelYs.some(ly => Math.abs(y - ly) < 0.018)
+    const wallNoise = Math.sin(x * 9.2 + z * 7.1) * Math.cos(r * 4.4) * 0.045
+    if (!onBench && r < PIT_RADIUS - 0.05) position.setY(i, y + wallNoise)
+    const t = (position.getY(i) - minY) / span
     const c = depthColor(t)
     colors[i * 3] = c.r
     colors[i * 3 + 1] = c.g
     colors[i * 3 + 2] = c.b
   }
+  geometry.computeVertexNormals()
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  return { geometry, levels, minY, maxY }
+}
 
-  return { geometry, levels }
+function ScanRings({ levels }) {
+  return (
+    <group>
+      {levels.map((level, i) => (
+        <mesh
+          key={level.elevation}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, elevationToY(level.elevation) + 0.02, 0]}
+        >
+          <ringGeometry args={[Math.max(0.08, level.radius - 0.015), level.radius + 0.015, 72]} />
+          <meshBasicMaterial color="#67e8f9" transparent opacity={0.28 - i * 0.02} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function ScanPulse() {
+  const ref = useRef()
+  useFrame(state => {
+    if (!ref.current) return
+    const t = (state.clock.elapsedTime * 0.28) % 1
+    const r = 0.35 + t * (PIT_GROUND_RADIUS + 0.4)
+    ref.current.scale.setScalar(r)
+    ref.current.material.opacity = 0.45 * (1 - t)
+    ref.current.position.y = -0.05 + t * 0.12
+  })
+  return (
+    <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.9, 1.02, 80]} />
+      <meshBasicMaterial color="#22d3ee" transparent opacity={0.4} depthWrite={false} blending={THREE.AdditiveBlending} />
+    </mesh>
+  )
 }
 
 export default function PitTerrain3D() {
   const { geometry, levels } = useMemo(() => buildGeometry(), [])
-  const groundHeight = useCallback(() => 0, [])
-  const roadRadius = levels[0].radius + (PIT_GROUND_RADIUS - levels[0].radius) * 0.5
+  const wire = useMemo(() => new THREE.WireframeGeometry(geometry), [geometry])
 
   return (
     <group>
-      <mesh geometry={geometry} receiveShadow>
-        <meshStandardMaterial vertexColors roughness={0.85} metalness={0.05} side={THREE.DoubleSide} />
+      <mesh geometry={geometry}>
+        <meshStandardMaterial
+          vertexColors
+          flatShading
+          roughness={0.42}
+          metalness={0.18}
+          emissive="#0b1220"
+          emissiveIntensity={0.35}
+          side={THREE.DoubleSide}
+        />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]} receiveShadow>
-        <ringGeometry args={[roadRadius - 0.14, roadRadius + 0.14, 96]} />
-        <meshStandardMaterial color="#3f3f46" roughness={0.95} />
-      </mesh>
-      <TerrainDressing innerRadius={PIT_GROUND_RADIUS + 0.15} outerRadius={PIT_GROUND_RADIUS + 2.4} heightFn={groundHeight} seed={7} />
+      <lineSegments geometry={wire}>
+        <lineBasicMaterial color="#e2e8f0" transparent opacity={0.14} />
+      </lineSegments>
+      <ScanRings levels={levels} />
+      <ScanPulse />
     </group>
   )
 }
