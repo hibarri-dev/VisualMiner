@@ -1,4 +1,5 @@
 import React from 'react'
+import { Anchor, Ship, ArrowUpRight, CheckCircle2, Clock, Layers } from 'lucide-react'
 import { useVisibleMine } from '../../context/useMineData'
 import ViewFrame from './ViewFrame'
 import DataTable from '../dashboard/DataTable'
@@ -82,14 +83,36 @@ export function MessagesView({ currentRole }) {
 export function PortsView({ currentRole }) {
   const { mine } = useVisibleMine(currentRole)
   return (
-    <ViewFrame eyebrow="Harbor" title="Terminal 2" description="Bulk loading blocked because crushed stockpiles are empty.">
+    <ViewFrame
+      eyebrow="Customer-Owned Marine Logistics"
+      title="Private Ports & Bulk Loading Terminals"
+      description="Full transshipment oversight for customer-owned deepwater berths, barge piers, and draft surveys connecting washplants and mines directly to ocean bulk carriers."
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 shrink-0">
+        <div className="p-4 rounded-xl border border-[#232634] bg-[#16171d] space-y-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Berths Managed</span>
+          <div className="text-xl font-bold text-white font-mono">2 Active Berths</div>
+          <p className="text-[11px] text-emerald-400">Deepwater & Barge Piers</p>
+        </div>
+        <div className="p-4 rounded-xl border border-[#232634] bg-[#16171d] space-y-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Bulk Carrier</span>
+          <div className="text-xl font-bold text-white font-mono">MV Deccan Bulk</div>
+          <p className="text-[11px] text-amber-400">65,000 DWT Capesize</p>
+        </div>
+        <div className="p-4 rounded-xl border border-[#232634] bg-[#16171d] space-y-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Transshipment Rate</span>
+          <div className="text-xl font-bold text-white font-mono">450 t/h</div>
+          <p className="text-[11px] text-indigo-400">South Basin Silica Sand Loading</p>
+        </div>
+      </div>
+
       <DataTable
         columns={[
-          { key: 'name', label: 'Terminal' },
+          { key: 'name', label: 'Terminal Name' },
           { key: 'berth', label: 'Berth' },
-          { key: 'vessel', label: 'Vessel' },
+          { key: 'vessel', label: 'Active Vessel' },
           { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
-          { key: 'note', label: 'Note' }
+          { key: 'note', label: 'Live Dispatch Note' }
         ]}
         rows={mine.ports}
       />
