@@ -23,13 +23,15 @@ function buildGeometry() {
   const span = maxY - minY || 1
   const colors = new Float32Array(position.count * 3)
 
+  const levelYs = levels.map(l => elevationToY(l.elevation))
   for (let i = 0; i < position.count; i += 1) {
     const x = position.getX(i)
     const y = position.getY(i)
     const z = position.getZ(i)
     const r = Math.hypot(x, z)
+    const onBench = levelYs.some(ly => Math.abs(y - ly) < 0.018)
     const wallNoise = Math.sin(x * 9.2 + z * 7.1) * Math.cos(r * 4.4) * 0.045
-    if (r < PIT_RADIUS - 0.05) position.setY(i, y + wallNoise)
+    if (!onBench && r < PIT_RADIUS - 0.05) position.setY(i, y + wallNoise)
     const t = (position.getY(i) - minY) / span
     const c = depthColor(t)
     colors[i * 3] = c.r

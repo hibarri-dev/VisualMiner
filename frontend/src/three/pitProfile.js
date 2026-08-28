@@ -83,11 +83,32 @@ export function elevationForBenchName(name) {
   return SITE.elevation.rim
 }
 
-// Places a marker exactly on its bench ring: direction comes from the machine's
-// x/y (0-100, pit-relative), radius/height come from the bench's real elevation.
+export function nearestPitLevel(elevation, levels) {
+  let best = levels[0]
+  let bestDist = Infinity
+  levels.forEach(level => {
+    const dist = Math.abs(level.elevation - elevation)
+    if (dist < bestDist) {
+      best = level
+      bestDist = dist
+    }
+  })
+  return best
+}
+
+export function benchRadius(level, levels, t = 0.55) {
+  const idx = levels.indexOf(level)
+  const next = levels[idx + 1]
+  if (!next) return Math.max(0.35, level.radius * 0.72)
+  return next.radius + (level.radius - next.radius) * t
+}
+
+const BENCH_SURFACE_LIFT = 0.028
+
 export function pitWorldPosition(x, y, elevation, levels, radiusBias = 0) {
-  const worldY = elevationToY(elevation)
-  const radius = radiusForElevation(elevation, levels) + radiusBias
+  const level = nearestPitLevel(elevation ?? levels[0].elevation, levels)
+  const worldY = elevationToY(level.elevation) + BENCH_SURFACE_LIFT
+  const radius = benchRadius(level, levels) + radiusBias
   const nx = (x - 50) / 50
   const nz = (y - 50) / 50
   const len = Math.hypot(nx, nz) || 1

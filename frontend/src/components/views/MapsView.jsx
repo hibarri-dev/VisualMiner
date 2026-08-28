@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useVisibleMine } from '../../context/useMineData'
 import { personForMachine } from '../../data'
 import StatusBadge from '../dashboard/StatusBadge'
@@ -22,7 +22,12 @@ export default function MapsView({ currentRole }) {
     setSelectedPersonId
   } = useVisibleMine(currentRole)
 
-  const mapMachines = mine.machines.filter(m => m.onMap)
+  const mapMachines = useMemo(() => {
+    const all = mine.machines.filter(m => m.onMap)
+    const featured = all.filter(m => m.featured)
+    const rest = all.filter(m => !m.featured)
+    return [...featured, ...rest].slice(0, 9)
+  }, [mine.machines])
   const mapPeople = mine.personnel.filter(p => p.onMap)
 
   return (

@@ -16,15 +16,15 @@ export const WORKER_GLB = `${MODELS}/worker.glb`
 export const TERRAIN_GLB = `${MODELS}/pit-terrain.glb`
 
 export const MODEL_SIZE = {
-  haul_truck: 0.95,
-  excavator: 0.85,
-  shovel: 1.05,
-  front_loader: 0.7,
-  dozer: 0.7,
-  grader: 0.72,
-  drill: 0.75,
-  water_truck: 0.9,
-  fuel_truck: 0.9,
+  haul_truck: 0.5,
+  excavator: 0.46,
+  shovel: 0.55,
+  front_loader: 0.4,
+  dozer: 0.38,
+  grader: 0.38,
+  drill: 0.4,
+  water_truck: 0.46,
+  fuel_truck: 0.46,
   worker: 0.32
 }
 

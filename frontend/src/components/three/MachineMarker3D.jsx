@@ -11,7 +11,7 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
   const levels = useMemo(() => buildPitLevels(), [])
   const elevation = machine.elevation ?? elevationForBenchName(machine.bench)
   const targetPos = useMemo(
-    () => pitWorldPosition(machine.x, machine.y, elevation, levels, -0.2),
+    () => pitWorldPosition(machine.x, machine.y, elevation, levels),
     [machine.x, machine.y, elevation, levels]
   )
 
@@ -19,8 +19,8 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
   const path = TRACK_PATHS[spec?.path || 'bench']
   const waypoint = path[(machine.waypointIndex ?? 0) % path.length]
   const lookTarget = useMemo(
-    () => pitWorldPosition(waypoint.x, waypoint.y, waypoint.elevation ?? elevation, levels, -0.2),
-    [waypoint.x, waypoint.y, waypoint.elevation, elevation, levels]
+    () => pitWorldPosition(waypoint.x, waypoint.y, elevation, levels),
+    [waypoint.x, waypoint.y, elevation, levels]
   )
 
   const groupRef = useRef()
@@ -80,7 +80,7 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
       )}
       {selected && (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.42, 0.5, 40]} />
+          <ringGeometry args={[0.28, 0.34, 40]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.85} />
         </mesh>
       )}

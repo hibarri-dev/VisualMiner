@@ -131,9 +131,9 @@ export const FEATURED_MACHINES = [
     status: 'Dumping',
     bench: 'Bench 1 Rim',
     zone: 'ROM Pad',
-    x: 72,
-    y: 78,
-    elevation: 890,
+    x: 82,
+    y: 28,
+    elevation: 920,
     onMap: true,
     featured: true,
     tracked: true,
@@ -151,8 +151,8 @@ export const FEATURED_MACHINES = [
     status: 'Loading',
     bench: 'Bench 4 North',
     zone: 'Bench 4 North',
-    x: 31,
-    y: 24,
+    x: 22,
+    y: 58,
     onMap: true,
     featured: true,
     tracked: true,
@@ -171,8 +171,8 @@ export const FEATURED_MACHINES = [
     status: 'Hauling',
     bench: 'Bench 4 South',
     zone: 'Haul Road 2',
-    x: 19,
-    y: 80,
+    x: 48,
+    y: 88,
     onMap: true,
     featured: true,
     tracked: true,
@@ -182,6 +182,35 @@ export const FEATURED_MACHINES = [
     speed: 2.6
   }
 ]
+
+export function spacePitMachines(machines) {
+  const onMap = machines.filter(m => m.onMap)
+  const bands = new Map()
+  onMap.forEach(m => {
+    const band = Math.round((m.elevation ?? 800) / 50) * 50
+    if (!bands.has(band)) bands.set(band, [])
+    bands.get(band).push(m)
+  })
+
+  const next = new Map()
+  bands.forEach((group, band) => {
+    const items = group
+      .map(m => ({ m, angle: Math.atan2(m.y - 50, m.x - 50) }))
+      .sort((a, b) => a.angle - b.angle)
+    const minGap = 0.62
+    const gap = Math.max(minGap, (Math.PI * 2) / Math.max(items.length, 1))
+    const origin = items[0]?.angle ?? (band * 0.15)
+    items.forEach((item, i) => {
+      const angle = origin + i * gap
+      next.set(item.m.id, {
+        x: 50 + Math.cos(angle) * 40,
+        y: 50 + Math.sin(angle) * 40
+      })
+    })
+  })
+
+  return machines.map(m => (next.has(m.id) ? { ...m, ...next.get(m.id) } : m))
+}
 
 export function pathSpeed(path) {
   if (path === 'haul') return 2.4
@@ -246,17 +275,18 @@ export function createMachines() {
   ]
 
   const onMapBudget = {
-    haul_truck: 4,
-    excavator: 2,
-    front_loader: 2,
-    dozer: 1,
-    grader: 1,
+    haul_truck: 2,
+    excavator: 0,
+    front_loader: 1,
+    dozer: 0,
+    grader: 0,
     drill: 1,
-    water_truck: 1,
-    fuel_truck: 1,
+    water_truck: 0,
+    fuel_truck: 0,
     shovel: 1
   }
   const onMapUsed = {}
+  const pathCursor = {}
 
   let serial = 10
   plan.forEach(({ type, count }) => {
@@ -267,8 +297,11 @@ export function createMachines() {
       if (onMap) onMapUsed[type] = usedForType + 1
 
       const path = spec.path
-      const start = pick(rng, TRACK_PATHS[path])
-      const waypointIndex = randInt(rng, 0, TRACK_PATHS[path].length - 1)
+      const track = TRACK_PATHS[path]
+      const slot = pathCursor[path] || 0
+      if (onMap) pathCursor[path] = slot + 1
+      const start = onMap ? track[slot % track.length] : pick(rng, track)
+      const waypointIndex = onMap ? slot % track.length : randInt(rng, 0, track.length - 1)
       const id = uniqueCode(rng, used)
       const cycle = cycleForWaypoint(type, waypointIndex)
       const broken = i === 0 && type === 'haul_truck'
@@ -296,7 +329,7 @@ export function createMachines() {
     }
   })
 
-  return machines
+  return spacePitMachines(machines)
 }
 
 export function machineGroup(type) {
