@@ -13,13 +13,7 @@ export const MACHINE_GLB = {
 }
 
 export const WORKER_GLB = `${MODELS}/worker.glb`
-export const TERRAIN_GLB = `${MODELS}/pit-terrain.glb`
 export const QUARRY_GCP = `${MODELS}/quarry_gcp.glb`
-
-export const QUARRY_WALL = {
-  diff: `${MODELS}/quarry-wall/diff.jpg`,
-  disp: `${MODELS}/quarry-wall/disp.jpg`
-}
 
 export const MODEL_SIZE = {
   haul_truck: 0.34,

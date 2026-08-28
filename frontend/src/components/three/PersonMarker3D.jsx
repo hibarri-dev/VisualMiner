@@ -5,6 +5,7 @@ import { quarryMarkerPosition, quarrySlope, sampleQuarryHeight } from '../../thr
 import { clearCrewPose, crewTooClose, separateCrew } from '../../three/crewTraffic'
 import { MODEL_SIZE, WORKER_GLB } from '../../three/modelCatalog'
 import WorkerGltf from './WorkerGltf'
+import ThermalGltf from './ThermalGltf'
 
 const MARGIN = 20
 
@@ -55,7 +56,7 @@ function pickWalk(rng, x, y, id) {
   return best
 }
 
-export default function PersonMarker3D({ person, selected, onSelect, slot = 0 }) {
+export default function PersonMarker3D({ person, selected, onSelect, slot = 0, thermal = false }) {
   const size = MODEL_SIZE.worker
   const groupRef = useRef()
   const driveRef = useRef(null)
@@ -166,7 +167,11 @@ export default function PersonMarker3D({ person, selected, onSelect, slot = 0 })
       }}
       onPointerOut={() => setHovered(false)}
     >
-      <WorkerGltf url={WORKER_GLB} size={size} selected={selected} clip={clip} />
+      {thermal ? (
+        <ThermalGltf url={WORKER_GLB} size={size} selected={selected} />
+      ) : (
+        <WorkerGltf url={WORKER_GLB} size={size} selected={selected} clip={clip} />
+      )}
       {selected && (
         <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.16, 0.2, 24]} />
