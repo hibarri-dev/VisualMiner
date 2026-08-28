@@ -39,7 +39,7 @@ export default function SiteReportsView({ activeSubTab, currentRole, onOpenModal
         </button>
       }
     >
-      <div className="flex-1 min-h-0 grid grid-cols-[1.2fr_0.8fr] gap-3">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-3">
         <DataTable
           selectedId={selected?.id}
           onSelect={row => setSelectedReportId(row.id)}

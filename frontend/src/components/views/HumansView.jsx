@@ -32,7 +32,7 @@ export default function HumansView({ activeSubTab, currentRole, onOpenModal }) {
         </button>
       }
     >
-      <div className="grid grid-cols-4 gap-2 shrink-0">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0">
         {[
           ['Operators', stats.operators],
           ['Geologists & engineers', stats.geologists],
