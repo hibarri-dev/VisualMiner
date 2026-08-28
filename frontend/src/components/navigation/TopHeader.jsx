@@ -8,9 +8,14 @@ import {
   FileText,
   Check,
   ShieldCheck,
-  CloudSun,
   Menu,
-  Sparkles
+  Sparkles,
+  Mountain,
+  Boxes,
+  Compass,
+  Calendar,
+  FlaskConical,
+  Users
 } from 'lucide-react'
 import { ROLES } from '../../config/navigationConfig'
 import { useVisibleMine } from '../../context/useMineData'
@@ -55,7 +60,7 @@ export default function TopHeader({
     : searchIndex.slice(0, 8)
 
   return (
-    <header className="h-16 bg-[#121316] border-b border-[#1e2027] px-3 sm:px-6 flex items-center justify-between text-slate-200 z-20 gap-2 sm:gap-4">
+    <header className="relative h-16 bg-[#121316] border-b border-[#1e2027] px-3 sm:px-6 flex items-center justify-between text-slate-200 z-40 gap-2 sm:gap-4">
       {/* Left: Hamburger (Mobile) + Search Bar */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
         {/* Mobile Menu Trigger */}
@@ -108,6 +113,13 @@ export default function TopHeader({
                       {item.type === 'worker' && <HardHat className="w-3.5 h-3.5 text-cyan-400 shrink-0" />}
                       {item.type === 'zone' && <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
                       {item.type === 'report' && <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0" />}
+                      {item.type === 'site' && <Compass className="w-3.5 h-3.5 text-violet-400 shrink-0" />}
+                      {item.type === 'ore' && <Mountain className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                      {item.type === 'pile' && <Boxes className="w-3.5 h-3.5 text-orange-400 shrink-0" />}
+                      {item.type === 'handover' && <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
+                      {item.type === 'lab' && <FlaskConical className="w-3.5 h-3.5 text-pink-400 shrink-0" />}
+                      {item.type === 'community' && <Users className="w-3.5 h-3.5 text-teal-400 shrink-0" />}
+                      {item.type === 'target' && <Compass className="w-3.5 h-3.5 text-purple-400 shrink-0" />}
                       <div className="truncate">
                         <div className="font-medium text-slate-200 truncate">{item.title}</div>
                         <div className="text-[11px] text-slate-400 truncate">{item.subtitle}</div>

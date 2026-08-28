@@ -327,16 +327,16 @@ export const GEOFENCES = [
 ]
 
 export const FEED_CATALOG = [
-  { id: 'feed-cat', name: 'CAT Fleet System', status: 'connected', latency: 42, domain: 'fleet' },
-  { id: 'feed-sap', name: 'SAP ERP', status: 'connected', latency: 120, domain: 'erp' },
-  { id: 'feed-scada', name: 'SCADA Telemetry', status: 'live', latency: 18, domain: 'plant' },
-  { id: 'feed-hexagon', name: 'Hexagon Mining', status: 'connected', latency: 65, domain: 'fleet' },
-  { id: 'feed-deswik', name: 'Deswik Mine Planning', status: 'syncing', latency: 210, domain: 'planning' },
-  { id: 'feed-micromine', name: 'Micromine Geological', status: 'connected', latency: 90, domain: 'geology' },
-  { id: 'feed-arcgis', name: 'ArcGIS Geospatial', status: 'connected', latency: 55, domain: 'geo' },
-  { id: 'feed-drone', name: 'Drone LiDAR System', status: 'live', latency: 30, domain: 'survey' },
-  { id: 'feed-cmms', name: 'CMMS Maintenance', status: 'connected', latency: 140, domain: 'maintenance' },
-  { id: 'feed-lab', name: 'Laboratory Assay System', status: 'connected', latency: 80, domain: 'lab' }
+  { id: 'feed-cat', name: 'CAT Fleet System', status: 'connected', latency: 42, domain: 'fleet', lastPayload: 'X7UIH53 dumping · 6700 kg' },
+  { id: 'feed-sap', name: 'SAP ERP', status: 'connected', latency: 120, domain: 'erp', lastPayload: '17 tippers standing time accruing' },
+  { id: 'feed-scada', name: 'SCADA Telemetry', status: 'live', latency: 18, domain: 'plant', lastPayload: 'X17 fault F-441 · 10 t/h' },
+  { id: 'feed-hexagon', name: 'Hexagon Mining', status: 'connected', latency: 65, domain: 'fleet', lastPayload: 'Haul spiral R12 machine guidance' },
+  { id: 'feed-deswik', name: 'Deswik Mine Planning', status: 'syncing', latency: 210, domain: 'planning', lastPayload: 'Bench 3 East blast 14:00 tomorrow' },
+  { id: 'feed-micromine', name: 'Micromine Geological', status: 'connected', latency: 90, domain: 'geology', lastPayload: 'QZ-1 block model 3.42 g/t Au' },
+  { id: 'feed-arcgis', name: 'ArcGIS Geospatial', status: 'connected', latency: 55, domain: 'geo', lastPayload: 'ML boundary + Robertsonpet CSR layer' },
+  { id: 'feed-drone', name: 'Drone LiDAR System', status: 'live', latency: 30, domain: 'survey', lastPayload: 'West grid — 3 mag anomalies' },
+  { id: 'feed-cmms', name: 'CMMS Maintenance', status: 'connected', latency: 140, domain: 'maintenance', lastPayload: 'WO-441 jaw replacement open' },
+  { id: 'feed-lab', name: 'Laboratory Assay System', status: 'connected', latency: 80, domain: 'lab', lastPayload: 'Conc 42% = 41.6% Cr2O3 off spec' }
 ]
 
 export const PLANTS = [
@@ -378,7 +378,8 @@ export const STOCKPILES = [
   { id: 'sp-conc-42', name: 'Concentrate 42%', tons: 410, capacity: 5000, status: 'ok', gradeLabel: '42% Cr2O3', siteId: 'bellary-chrome' },
   { id: 'sp-conc-50', name: 'Concentrate 50%', tons: 880, capacity: 5000, status: 'ok', gradeLabel: '50% Cr2O3', siteId: 'bellary-chrome' },
   { id: 'sp-conc-60', name: 'Concentrate 60%', tons: 0, capacity: 4000, status: 'empty', gradeLabel: '60% Cr2O3', siteId: 'bellary-chrome' },
-  { id: 'sp-anth', name: 'Anthracite Seam A (raw sale)', tons: 2100, capacity: 8000, status: 'ok', gradeLabel: 'FC 86%', siteId: 'talcher-anthracite' }
+  { id: 'sp-anth', name: 'Anthracite Seam A (raw sale)', tons: 2100, capacity: 8000, status: 'ok', gradeLabel: 'FC 86%', siteId: 'talcher-anthracite' },
+  { id: 'sp-silica', name: 'Washed silica (South Basin)', tons: 3400, capacity: 6000, status: 'ok', gradeLabel: '99.1% SiO2', siteId: 'kolar-washplant-south' }
 ]
 
 export const PORTS = [

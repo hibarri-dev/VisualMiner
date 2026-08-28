@@ -19,7 +19,8 @@ export default function FeedsView({ currentRole }) {
           { key: 'name', label: 'Supplier' },
           { key: 'domain', label: 'Domain' },
           { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
-          { key: 'latency', label: 'Latency', render: r => `${r.latency} ms` }
+          { key: 'latency', label: 'Latency', render: r => `${r.latency} ms` },
+          { key: 'lastPayload', label: 'Last payload' }
         ]}
         rows={mine.feeds}
       />
@@ -74,7 +75,8 @@ export function ScheduleView({ currentRole }) {
           { key: 'recordedBy', label: 'Recorded by' },
           { key: 'acceptedBy', label: 'Accepted by' },
           { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
-          { key: 'notes', label: 'Notes' }
+          { key: 'notes', label: 'Notes' },
+          { key: 'openActions', label: 'Open actions', render: r => (r.openActions || []).join(' · ') }
         ]}
         rows={mine.handovers || []}
       />

@@ -43,6 +43,28 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
           </div>
         </div>
 
+        {!geology && (mine.insights || []).slice(0, 4).map(ins => (
+          <div key={ins.id} className="space-y-1 pb-3 border-b border-[#232530]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{ins.area}</div>
+            <h3 className="text-[14px] sm:text-[15px] font-semibold text-white tracking-tight leading-snug">{ins.title}</h3>
+            <p className="text-[12px] text-slate-400 leading-relaxed">{ins.detail}</p>
+          </div>
+        ))}
+
+        {!geology && (mine.alerts || []).length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-[13px] font-semibold text-white tracking-tight">Live alerts</h3>
+            {(mine.alerts || []).map(al => (
+              <div key={al.id} className="text-[12px] text-slate-400 leading-snug">
+                <span className="font-mono text-[10px] text-amber-300 uppercase">{al.severity}</span>
+                {' · '}
+                <span className="text-slate-200">{al.title}</span>
+                <div className="text-[11px] text-slate-500">{al.source}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* 1. Extraction / Project */}
         <div className="space-y-2">
           <h3 className="text-[16px] sm:text-[17px] font-semibold text-white tracking-tight">
