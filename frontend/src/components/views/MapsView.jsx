@@ -36,10 +36,10 @@ export default function MapsView({ currentRole }) {
           <StatusBadge value={`${mapMachines.length} on pit`} />
         </div>
         <Scene3D
-          cameraPosition={[0.4, 8.6, 9.8]}
+          cameraPosition={[0.2, 3.4, 4.2]}
           sunPosition={[10, 12, 4]}
-          controlsTarget={[0, 0.4, 0]}
-          minDistance={4}
+          controlsTarget={[0, 0.9, 0]}
+          minDistance={1}
           maxDistance={22}
           fogNear={18}
           fogFar={42}
@@ -65,10 +65,10 @@ export default function MapsView({ currentRole }) {
           <StatusBadge value={`${Math.min(mapPeople.length, 14)} tagged`} />
         </div>
         <Scene3D
-          cameraPosition={[-4.8, 7.1, 10.2]}
+          cameraPosition={[-2.1, 3.1, 4.5]}
           sunPosition={[-6, 11, 7]}
-          controlsTarget={[0, 0.5, 0]}
-          minDistance={4}
+          controlsTarget={[0, 0.9, 0]}
+          minDistance={1}
           maxDistance={28}
           fogNear={18}
           fogFar={42}

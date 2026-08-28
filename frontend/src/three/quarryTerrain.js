@@ -99,14 +99,28 @@ export function clampToQuarry(x, z) {
   return snapToLand(x, z)
 }
 
-export function quarrySlope(x, z, span = 0.1) {
+const MAX_TILT = 0.42 // ~24deg; the height grid is coarser than the mesh, so raw
+// gradients near cliff edges would otherwise lay a vehicle on its side.
+
+// Tilt for a body sitting at (x, z) facing `yaw`. The height gradient is measured
+// along world axes, so it has to be rotated into the body frame — applying it
+// directly as rotation.x/z (as this used to) makes a turning vehicle lean sideways
+// on climbs and pitch while crossing a slope, which reads as sliding/ghosting.
+export function quarrySlope(x, z, span = 0.1, yaw = 0) {
   const hL = sampleQuarryHeight(x - span, z)
   const hR = sampleQuarryHeight(x + span, z)
   const hD = sampleQuarryHeight(x, z - span)
   const hU = sampleQuarryHeight(x, z + span)
+  const gx = (hR - hL) / (span * 2)
+  const gz = (hU - hD) / (span * 2)
+  const s = Math.sin(yaw)
+  const c = Math.cos(yaw)
+  const alongForward = gx * s + gz * c
+  const alongRight = gx * c - gz * s
+  const clamp = v => Math.max(-MAX_TILT, Math.min(MAX_TILT, v))
   return {
-    pitch: Math.atan2(hD - hU, span * 2),
-    roll: Math.atan2(hR - hL, span * 2)
+    pitch: clamp(-Math.atan(alongForward)),
+    roll: clamp(Math.atan(alongRight))
   }
 }
 
