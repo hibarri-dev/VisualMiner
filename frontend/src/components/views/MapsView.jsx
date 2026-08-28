@@ -3,9 +3,7 @@ import { useVisibleMine } from '../../context/useMineData'
 import { personForMachine } from '../../data'
 import StatusBadge from '../dashboard/StatusBadge'
 import Scene3D from '../three/Scene3D'
-import PitTerrain3D from '../three/PitTerrain3D'
-import ScanTerrain3D from '../three/ScanTerrain3D'
-import MineProcess3D from '../three/MineProcess3D'
+import QuarryGltf3D from '../three/QuarryGltf3D'
 import MachineMarker3D from '../three/MachineMarker3D'
 import PersonMarker3D from '../three/PersonMarker3D'
 import { preloadGltfs } from '../three/FittedGltf'
@@ -38,19 +36,21 @@ export default function MapsView({ currentRole }) {
           <StatusBadge value={`${mapMachines.length} on pit`} />
         </div>
         <Scene3D
-          cameraPosition={[5.4, 4.6, 6.8]}
-          sunPosition={[8, 7, 3]}
-          controlsTarget={[0, -1.1, 0]}
-          minDistance={4}
-          maxDistance={20}
+          cameraPosition={[0.2, 3.4, 4.2]}
+          sunPosition={[10, 12, 4]}
+          controlsTarget={[0, 0.9, 0]}
+          minDistance={1}
+          maxDistance={22}
+          fogNear={18}
+          fogFar={42}
           onPointerMissed={() => setSelectedMachineId(null)}
         >
-          <PitTerrain3D />
-          <MineProcess3D />
-          {mapMachines.map(machine => (
+          <QuarryGltf3D />
+          {mapMachines.map((machine, i) => (
             <MachineMarker3D
               key={machine.id}
               machine={machine}
+              slot={i}
               selected={machine.id === selectedMachineId}
               operator={personForMachine(mine.personnel, machine.id)}
               onSelect={setSelectedMachineId}
@@ -62,24 +62,26 @@ export default function MapsView({ currentRole }) {
       <div className="relative flex-1 min-h-[300px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl select-none">
         <div className="absolute left-4 top-3 z-20 flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Personnel monitoring</span>
-          <StatusBadge value={`${mapPeople.length} tagged`} />
+          <StatusBadge value={`${Math.min(mapPeople.length, 14)} tagged`} />
         </div>
         <Scene3D
-          cameraPosition={[0.8, 5.4, 9.2]}
-          sunPosition={[-4, 8, 6]}
-          controlsTarget={[0, 0.35, 0]}
-          minDistance={4}
-          maxDistance={22}
+          cameraPosition={[-2.1, 3.1, 4.5]}
+          sunPosition={[-6, 11, 7]}
+          controlsTarget={[0, 0.9, 0]}
+          minDistance={1}
+          maxDistance={28}
+          fogNear={18}
+          fogFar={42}
           onPointerMissed={() => setSelectedPersonId(null)}
         >
-          <ScanTerrain3D />
-          {mapPeople.map(person => (
+          <QuarryGltf3D />
+          {mapPeople.slice(0, 14).map((person, i) => (
             <PersonMarker3D
               key={person.id}
               person={person}
+              slot={i}
               selected={person.id === selectedPersonId}
               onSelect={setSelectedPersonId}
-              scan
             />
           ))}
         </Scene3D>
