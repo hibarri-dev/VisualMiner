@@ -6,8 +6,8 @@ export const SITES_CATALOG = [
     location: 'Kolar Gold Fields, Karnataka',
     type: 'open_pit', // 'open_pit' | 'wash_plant' | 'crushing_plant' | 'exploration' | 'port_terminal'
     typeLabel: 'Open Pit Mine',
-    stage: 'mining', // 'surveying' | 'prospecting' | 'mining' | 'processing' | 'rehabilitation'
-    stageLabel: 'Active Mining',
+    stage: 'extraction',
+    stageLabel: 'Extraction',
     commodity: 'Gold',
     activeAlerts: 1,
     testResults: {
@@ -110,8 +110,8 @@ export const SITES_CATALOG = [
     location: 'Panambur, Mangalore Coastal Port',
     type: 'port_terminal',
     typeLabel: 'Private Port & Transshipment',
-    stage: 'processing',
-    stageLabel: 'Logistics & Loading',
+    stage: 'transport',
+    stageLabel: 'Transport',
     commodity: 'Bulk Ore & Aggregates',
     activeAlerts: 1,
     testResults: {
@@ -128,15 +128,145 @@ export const SITES_CATALOG = [
       personnel: 35,
       machines: 12
     }
+  },
+  {
+    id: 'kolar-survey-grid',
+    name: 'Kolar West LiDAR Block',
+    code: 'KWL-00',
+    location: 'West of Kolar North rim',
+    type: 'exploration',
+    typeLabel: 'Survey grid (no pit yet)',
+    stage: 'surveying',
+    stageLabel: 'Surveying',
+    commodity: 'Gold targets',
+    activeAlerts: 0,
+    sellsRaw: false,
+    testResults: {
+      hasData: true,
+      lithology: 'Drone LiDAR + ground mag — 3 anomalies',
+      assayGrade: 'No core yet',
+      recoveryRate: 'N/A',
+      waterQualityIndex: 'Baseline',
+      ambientDust: '12 µg/m³',
+      lastSurveyDate: '2026-08-28'
+    },
+    metrics: { extraction: '0 t/h', personnel: 6, machines: 1 }
+  },
+  {
+    id: 'bellary-chrome',
+    name: 'Bellary MG1 Chrome Pit',
+    code: 'BMC-07',
+    location: 'Sandur belt, Bellary',
+    type: 'open_pit',
+    typeLabel: 'Chrome pit + plant',
+    stage: 'processing',
+    stageLabel: 'Processing',
+    commodity: 'Chrome (24% ROM → 42/50/60% conc)',
+    activeAlerts: 1,
+    sellsRaw: false,
+    testResults: {
+      hasData: true,
+      lithology: 'MG1 / MG2 chromite seams',
+      assayGrade: 'ROM 24.1% Cr2O3 · Conc 42% lab 41.6% (off spec)',
+      recoveryRate: 'Plant starved — X17 corridor',
+      waterQualityIndex: 'Recycle 90',
+      ambientDust: '44 µg/m³',
+      lastSurveyDate: '2026-08-27'
+    },
+    metrics: { extraction: '90 t/h ROM', personnel: 86, machines: 22 }
+  },
+  {
+    id: 'talcher-anthracite',
+    name: 'Talcher Anthracite Seam A',
+    code: 'TAS-03',
+    location: 'Talcher coalfield (demo)',
+    type: 'open_pit',
+    typeLabel: 'Sells ROM raw — no plant',
+    stage: 'extraction',
+    stageLabel: 'Extraction',
+    commodity: 'Anthracite',
+    activeAlerts: 0,
+    sellsRaw: true,
+    testResults: {
+      hasData: true,
+      lithology: 'Seam A anthracite',
+      assayGrade: 'Fixed carbon 86% — sold as extracted',
+      recoveryRate: 'N/A (no concentrate)',
+      waterQualityIndex: 'OK',
+      ambientDust: '61 µg/m³',
+      lastSurveyDate: '2026-08-26'
+    },
+    metrics: { extraction: '55 t/h raw', personnel: 40, machines: 11 }
+  },
+  {
+    id: 'kolar-old-void',
+    name: 'Kolar Historic Void',
+    code: 'KHV-99',
+    location: 'Legacy workings, KGF',
+    type: 'open_pit',
+    typeLabel: 'Closed pit',
+    stage: 'rehabilitation',
+    stageLabel: 'Rehabilitation',
+    commodity: 'None — dormant',
+    activeAlerts: 0,
+    sellsRaw: false,
+    testResults: {
+      hasData: true,
+      lithology: 'Backfill + topsoil trial plots',
+      assayGrade: 'N/A',
+      recoveryRate: 'Dormant',
+      waterQualityIndex: 'Piezometers monthly',
+      ambientDust: '18 µg/m³',
+      lastSurveyDate: '2026-08-01'
+    },
+    metrics: { extraction: '0 t/h', personnel: 4, machines: 1 }
+  },
+  {
+    id: 'kolar-ml-renewal',
+    name: 'Kolar ML renewal & CSR desk',
+    code: 'KML-11',
+    location: 'Robertsonpet / district office',
+    type: 'exploration',
+    typeLabel: 'Licensing & communities',
+    stage: 'licensing',
+    stageLabel: 'Licensing & communities',
+    commodity: 'Gold (permit cycle)',
+    activeAlerts: 1,
+    sellsRaw: false,
+    testResults: {
+      hasData: true,
+      lithology: 'Rehab bond + village employment register',
+      assayGrade: 'N/A — not extracting',
+      recoveryRate: 'Jobs 38 / 60 promised',
+      waterQualityIndex: 'Bond monitoring',
+      ambientDust: 'N/A',
+      lastSurveyDate: '2026-08-15'
+    },
+    metrics: { extraction: '0 t/h (permit)', personnel: 8, machines: 0 }
+  },
+  {
+    id: 'bellary-conc-lab',
+    name: 'Bellary concentrate assay shed',
+    code: 'BCA-08',
+    location: 'Adjacent MG1 plant, Sandur',
+    type: 'crushing_plant',
+    typeLabel: 'Stockpile laboratory',
+    stage: 'testing',
+    stageLabel: 'Testing',
+    commodity: 'Chrome concentrate 42/50/60%',
+    activeAlerts: 1,
+    sellsRaw: false,
+    testResults: {
+      hasData: true,
+      lithology: 'Named piles awaiting sale cert',
+      assayGrade: 'Conc 42% = 41.6% Cr2O3 (off spec)',
+      recoveryRate: 'Hold 42% pile — do not load',
+      waterQualityIndex: 'N/A',
+      ambientDust: 'Plant adjacent',
+      lastSurveyDate: '2026-08-28'
+    },
+    metrics: { extraction: '0 t/h (lab)', personnel: 6, machines: 0 }
   }
-]
-
-export const SITE_STAGES = [
-  { id: 'surveying', label: 'Surveying', color: '#a855f7', desc: 'Topographical LiDAR & baseline geodetic mapping' },
-  { id: 'prospecting', label: 'Prospecting', color: '#38bdf8', desc: 'Core sampling, geological assay & reserve modeling' },
-  { id: 'mining', label: 'Mining', color: '#10b981', desc: 'Active pit extraction, drilling & blast operations' },
-  { id: 'processing', label: 'Processing', color: '#f59e0b', desc: 'Crushing, washing, screening & beneficiation plants' },
-  { id: 'rehabilitation', label: 'Rehabilitation', color: '#06b6d4', desc: 'Topsoil restoration, eco-revegetation & monitoring' }
 ]
 
 export const SITE = {
@@ -214,10 +344,15 @@ export const PLANTS = [
 ]
 
 export const STOCKPILES = [
-  { id: 'sp-crushed', name: 'Crushed Fines', tons: 0, capacity: 8000, status: 'empty' },
-  { id: 'sp-rom', name: 'ROM Coarse', tons: 6420, capacity: 12000, status: 'high' },
-  { id: 'sp-oxide', name: 'Oxide Ore', tons: 1880, capacity: 6000, status: 'ok' },
-  { id: 'sp-waste', name: 'Waste Dump West', tons: 21400, capacity: 40000, status: 'ok' }
+  { id: 'sp-rom', name: 'ROM Coarse (QZ-1)', tons: 6420, capacity: 12000, status: 'high', gradeLabel: '3.42 g/t Au', siteId: 'kolar-north' },
+  { id: 'sp-crushed', name: 'Crushed Fines', tons: 0, capacity: 8000, status: 'empty', gradeLabel: '—', siteId: 'kolar-north' },
+  { id: 'sp-oxide', name: 'Oxide Ore', tons: 1880, capacity: 6000, status: 'ok', gradeLabel: 'oxide Au', siteId: 'kolar-north' },
+  { id: 'sp-waste', name: 'Waste Dump West', tons: 21400, capacity: 40000, status: 'ok', gradeLabel: 'waste', siteId: 'kolar-north' },
+  { id: 'sp-rom-chrome', name: 'ROM Chrome 24%', tons: 8200, capacity: 15000, status: 'high', gradeLabel: '24% Cr2O3', siteId: 'bellary-chrome' },
+  { id: 'sp-conc-42', name: 'Concentrate 42%', tons: 410, capacity: 5000, status: 'ok', gradeLabel: '42% Cr2O3', siteId: 'bellary-chrome' },
+  { id: 'sp-conc-50', name: 'Concentrate 50%', tons: 880, capacity: 5000, status: 'ok', gradeLabel: '50% Cr2O3', siteId: 'bellary-chrome' },
+  { id: 'sp-conc-60', name: 'Concentrate 60%', tons: 0, capacity: 4000, status: 'empty', gradeLabel: '60% Cr2O3', siteId: 'bellary-chrome' },
+  { id: 'sp-anth', name: 'Anthracite Seam A (raw sale)', tons: 2100, capacity: 8000, status: 'ok', gradeLabel: 'FC 86%', siteId: 'talcher-anthracite' }
 ]
 
 export const PORTS = [

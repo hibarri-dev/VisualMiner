@@ -12,8 +12,10 @@ import {
   FileSpreadsheet
 } from 'lucide-react'
 import { SITE_STAGES } from '../../data'
+import { useMineData } from '../../context/useMineData'
 
-export default function RegisterSiteModal({ isOpen, onClose }) {
+export default function RegisterSiteModal({ isOpen, onClose, onRegistered }) {
+  const { addSite } = useMineData()
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
   const [type, setType] = useState('wash_plant')
@@ -28,6 +30,7 @@ export default function RegisterSiteModal({ isOpen, onClose }) {
 
   const handleSubmit = e => {
     e.preventDefault()
+    addSite({ name, location, type, stage, commodity, skipTestData, lithology, assayGrade })
     setIsSuccess(true)
   }
 
@@ -111,7 +114,18 @@ export default function RegisterSiteModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Stage Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Commodity / ore body
+                </label>
+                <input
+                  type="text"
+                  value={commodity}
+                  onChange={e => setCommodity(e.target.value)}
+                  placeholder="e.g. Chrome, Anthracite, Gold"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#1a1c25] border border-[#262835] text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
                   Lifecycle Stage
@@ -201,6 +215,9 @@ export default function RegisterSiteModal({ isOpen, onClose }) {
               <button
                 onClick={() => {
                   setIsSuccess(false)
+                  setName('')
+                  setLocation('')
+                  if (onRegistered) onRegistered()
                   onClose()
                 }}
                 className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"

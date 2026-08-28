@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Compass,
   MapPin,
@@ -6,24 +6,27 @@ import {
   Wrench,
   Mountain,
   Anchor,
-  Sparkles,
   CheckCircle2,
   Clock,
   FileSpreadsheet,
-  Layers,
-  AlertCircle,
   Plus,
   ArrowUpRight
 } from 'lucide-react'
 import { useVisibleMine } from '../../context/useMineData'
 import { SITE_STAGES } from '../../data'
 import ViewFrame from './ViewFrame'
-import StatusBadge from '../dashboard/StatusBadge'
 
-export default function SitesView({ currentRole, onOpenModal }) {
+export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
   const { mine } = useVisibleMine(currentRole)
   const [selectedSiteId, setSelectedSiteId] = useState('kolar-north')
   const [stageFilter, setStageFilter] = useState('all')
+
+  useEffect(() => {
+    if (typeof activeSubTab === 'string' && activeSubTab.startsWith('site-')) {
+      const id = activeSubTab.slice('site-'.length)
+      if (mine.sites?.some(s => s.id === id)) setSelectedSiteId(id)
+    }
+  }, [activeSubTab, mine.sites])
 
   const sites = mine.sites || []
 
@@ -192,12 +195,53 @@ export default function SitesView({ currentRole, onOpenModal }) {
               <div className="p-3.5 rounded-xl bg-[#191b24] border border-[#262a38] space-y-1 text-xs">
                 <div className="font-semibold text-slate-200 flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Current Lifecycle Stage: {selectedSite.stageLabel}</span>
+                  <span>Current cycle stage: {selectedSite.stageLabel}</span>
                 </div>
                 <p className="text-slate-400 text-[11px] leading-relaxed">
                   {SITE_STAGES.find(s => s.id === selectedSite.stage)?.desc}
                 </p>
+                {selectedSite.sellsRaw && (
+                  <p className="text-amber-300/90 text-[11px] pt-1">This site sells ROM as extracted (e.g. anthracite). No concentrate plant.</p>
+                )}
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {(SITE_STAGES.find(s => s.id === selectedSite.stage)?.relevant || []).map(tag => (
+                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[#252838] text-slate-300 font-mono">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
+
+              {selectedSite.stage === 'rehabilitation' && (
+                <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-cyan-200">
+                  Dormant. No extraction, processing, or loading. Community + piezometers only.
+                </div>
+              )}
+              {selectedSite.stage === 'prospecting' && (
+                <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-200">
+                  Lab grade is the product. Do not expect crushing, named concentrate piles, or a weighbridge.
+                </div>
+              )}
+              {selectedSite.stage === 'surveying' && (
+                <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-200">
+                  Targets only. No ore body named yet — no fleet hours, no plant.
+                </div>
+              )}
+              {selectedSite.stage === 'licensing' && (
+                <div className="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-xs text-pink-200">
+                  Permits, rehab bond, and village jobs/royalties. Extraction and plant KPIs are not the focus yet.
+                </div>
+              )}
+              {selectedSite.stage === 'testing' && (
+                <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200">
+                  Lab certifies named stockpile percentages before sale. Off-spec piles must not go to the weighbridge.
+                </div>
+              )}
+              {selectedSite.stage === 'transport' && (
+                <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs text-orange-200">
+                  Product is sold. Gate queue, named-pile loading, and weighbridge tickets are the live data.
+                </div>
+              )}
 
               {/* Test Results & All Site Data to Date */}
               <div className="space-y-2.5">
@@ -251,9 +295,43 @@ export default function SitesView({ currentRole, onOpenModal }) {
                   </div>
                 )}
               </div>
+
+              {(mine.oreBodies || []).filter(b => b.siteId === selectedSite.id).length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Named ore bodies / seams</h4>
+                  {(mine.oreBodies || []).filter(b => b.siteId === selectedSite.id).map(b => (
+                    <div key={b.id} className="flex justify-between text-[11px] text-slate-300 px-2 py-1 rounded bg-[#191b24] border border-[#272b3b]">
+                      <span>{b.name}</span>
+                      <span className="font-mono text-emerald-300">{b.headGrade}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {(mine.labTests || []).filter(t => t.siteId === selectedSite.id).length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Laboratory tests</h4>
+                  {(mine.labTests || []).filter(t => t.siteId === selectedSite.id).map(t => (
+                    <div key={t.id} className="flex justify-between gap-2 text-[11px] text-slate-300 px-2 py-1 rounded bg-[#191b24] border border-[#272b3b]">
+                      <span>{t.sample}</span>
+                      <span className="font-mono text-indigo-300 shrink-0">{t.result}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {(mine.communities || []).filter(c => c.siteId === selectedSite.id).length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Communities</h4>
+                  {(mine.communities || []).filter(c => c.siteId === selectedSite.id).map(c => (
+                    <div key={c.id} className="text-[11px] text-slate-300 px-2 py-1.5 rounded bg-[#191b24] border border-[#272b3b]">
+                      {c.village} · jobs {c.jobsFilled}/{c.jobsPromised} · {c.royaltyDueInr}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Quick Action Footer */}
             <div className="pt-3 border-t border-[#202330] flex items-center justify-between text-xs">
               <span className="text-slate-400">Last survey: <span className="text-slate-200 font-mono">{selectedSite.testResults.lastSurveyDate}</span></span>
               <button

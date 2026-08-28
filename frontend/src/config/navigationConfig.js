@@ -46,7 +46,7 @@ export const NAVIGATION_ITEMS = [
     id: 'sites',
     label: 'Sites',
     icon: Compass,
-    badge: '5 Managed',
+    badge: '10 Managed',
     description: 'Mining assets, washplants, crushing plants, exploration stages & test results',
     quickAction: { label: 'Register Site', modalId: 'register-site' },
     children: [
@@ -209,6 +209,21 @@ export function getNavigationItems(stats) {
   if (!stats) return NAVIGATION_ITEMS
 
   return NAVIGATION_ITEMS.map(item => {
+    if (item.id === 'sites') {
+      const sites = stats.sites || []
+      return {
+        ...item,
+        badge: `${stats.sitesCount || sites.length} Managed`,
+        children: sites.map(site => ({
+          id: `site-${site.id}`,
+          label: site.name,
+          stage: site.stage,
+          stageLabel: site.stageLabel,
+          typeLabel: site.typeLabel,
+          badge: site.stageLabel
+        }))
+      }
+    }
     if (item.id === 'processing') {
       return {
         ...item,

@@ -18,7 +18,14 @@ const TONES = {
   live: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   connected: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
   syncing: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  empty: 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+  empty: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  accepted: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  draft: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  held_gate: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  ticketed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  watch: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  cleared: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  queued: 'bg-orange-500/15 text-orange-300 border-orange-500/30'
 }
 
 export default function StatusBadge({ value }) {

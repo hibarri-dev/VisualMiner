@@ -77,7 +77,11 @@ export default function AppLayout({ children }) {
         onTracked={() => setActiveTab('maps')}
       />
       <AddPersonModal isOpen={activeModal === 'add-person'} onClose={handleCloseModal} />
-      <RegisterSiteModal isOpen={activeModal === 'register-site'} onClose={handleCloseModal} />
+      <RegisterSiteModal
+        isOpen={activeModal === 'register-site'}
+        onClose={handleCloseModal}
+        onRegistered={() => setActiveTab('sites')}
+      />
     </div>
   )
 }
