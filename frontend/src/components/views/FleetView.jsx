@@ -36,7 +36,7 @@ export default function FleetView({ activeSubTab, currentRole, onOpenModal }) {
         </button>
       }
     >
-      <div className="grid grid-cols-6 gap-2 shrink-0">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 shrink-0">
         {[
           ['Dump trucks', stats.haulers],
           ['Excavators', stats.excavators],
