@@ -219,6 +219,11 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
               {selectedSite.stage === 'prospecting' && (
                 <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-200">
                   Lab grade is the product. Do not expect crushing, named concentrate piles, or a weighbridge.
+                  {selectedSite.id === 'queensway-nfg' && (
+                    <span className="block mt-1.5 text-sky-100">
+                      Live 3D model is under Mines → 3D Mine Models — generated from public NI 43-101 drill + seismic filings.
+                    </span>
+                  )}
                 </div>
               )}
               {selectedSite.stage === 'surveying' && (

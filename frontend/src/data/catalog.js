@@ -78,6 +78,32 @@ export const SITES_CATALOG = [
     }
   },
   {
+    id: 'queensway-nfg',
+    name: 'Queensway Gold (New Found Gold)',
+    code: 'NFGC-QW',
+    location: '15 km west of Gander, Newfoundland and Labrador',
+    type: 'exploration',
+    typeLabel: 'Listed explorer — no operating mine',
+    stage: 'prospecting',
+    stageLabel: 'Prospecting',
+    commodity: 'Gold (Appleton Fault)',
+    activeAlerts: 0,
+    testResults: {
+      hasData: true,
+      lithology: 'Orogenic gold in siltstone/sandstone along the Appleton Fault Zone',
+      assayGrade: '343 g/t Au over 2.15 m (NFGC-24-2158, Golden Dome)',
+      recoveryRate: 'No mill — PEA stage, public NI 43-101 only',
+      waterQualityIndex: 'Baseline (exploration camp)',
+      ambientDust: 'N/A (no pit)',
+      lastSurveyDate: '2025-04-29'
+    },
+    metrics: {
+      extraction: '0 t/h (pre-mining)',
+      personnel: 0,
+      machines: 8
+    }
+  },
+  {
     id: 'chitradurga-prospect',
     name: 'Chitradurga East Ridge',
     code: 'CDE-09',

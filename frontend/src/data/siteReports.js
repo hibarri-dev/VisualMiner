@@ -14,6 +14,28 @@ export const REPORT_TYPES = [
 export function createSiteReports() {
   return [
     {
+      id: 'rep-nfg-seismic',
+      type: 'geological',
+      title: 'Queensway 3-D seismic → deep drilling',
+      summary: 'New Found Gold (TSX-V: NFG) used a 2023 3-D seismic survey to site deep holes along the Appleton Fault. First deep program doubled known vertical extent to 820 m. Public NI 43-101 composites, no operating mine.',
+      source: 'Micromine Geological',
+      status: 'ai_updated',
+      yieldHint: null,
+      zone: 'Queensway AFZ',
+      at: 'Jul 2024'
+    },
+    {
+      id: 'rep-nfg-dome',
+      type: 'geological',
+      title: 'Golden Dome 343 g/t Au over 2.15 m',
+      summary: 'NFGC-24-2158: 343 g/t Au over 2.15 m, 9.51 g/t over 7.45 m, 40.6 g/t over 2.20 m. Listed-explorer investor disclosure (SEC Exhibit 99.1). Model rebuilt from the table.',
+      source: 'Laboratory Assay System',
+      status: 'ai_updated',
+      yieldHint: null,
+      zone: 'Golden Dome',
+      at: 'Oct 2024'
+    },
+    {
       id: 'rep-assay-204',
       type: 'geological',
       title: 'Geological Blast Assay 204',
