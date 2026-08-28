@@ -1,5 +1,5 @@
 import { SITE, GEOFENCES, PORTS, WORKER_PERSONA } from './catalog'
-import { createMachines, MACHINE_TYPES } from './machines'
+import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed } from './machines'
 import { createPersonnel } from './personnel'
 import {
   createProduction,
@@ -76,37 +76,49 @@ export function tickMine(mine) {
   const rng = mulberry32((Date.now() ^ 0x9e3779b9) >>> 0)
 
   const machines = mine.machines.map(m => {
-    if (m.featured && m.id === 'X7UIH53') {
-      return {
-        ...m,
-        fuelPercent: Math.round(clamp(m.fuelPercent + (rng() - 0.5) * 0.6, 84, 90) * 10) / 10,
-        payloadKg: Math.round(clamp(m.payloadKg + (rng() - 0.5) * 90, 6500, 6900))
-      }
-    }
+    const spec = MACHINE_TYPES[m.type]
+    let next = stepAlongPath(m)
+
     if (m.status === 'Breakdown' || m.status === 'Maintenance') {
-      return { ...m, fuelPercent: m.fuelPercent }
+      return { ...next, fuelPercent: m.fuelPercent }
     }
+
     const nextFuel = clamp(m.fuelPercent - rng() * 0.35, 8, 100)
-    const payloadDelta = m.type === 'haul_truck' ? Math.round((rng() - 0.45) * 1200) : 0
-    return {
-      ...m,
+    const payloadDelta = spec?.payloadKg ? Math.round((rng() - 0.45) * 1200) : 0
+    next = {
+      ...next,
       fuelPercent: Math.round(nextFuel * 10) / 10,
-      payloadKg:
-        m.type === 'haul_truck'
-          ? Math.round(clamp(m.payloadKg + payloadDelta, 0, m.payloadCapacityKg || 90000))
-          : 0,
-      x: m.onMap ? clamp(m.x + (rng() - 0.5) * 0.6, 8, 92) : m.x,
-      y: m.onMap ? clamp(m.y + (rng() - 0.5) * 0.6, 10, 90) : m.y
+      payloadKg: spec?.payloadKg
+        ? Math.round(clamp((m.payloadKg || 0) + payloadDelta, 0, spec.payloadKg))
+        : 0
     }
+
+    if (m.id === 'X7UIH53') {
+      next.fuelPercent = Math.round(clamp(next.fuelPercent, 84, 90) * 10) / 10
+      next.payloadKg = Math.round(clamp(next.payloadKg || 6700, 6500, 6900))
+    }
+
+    return next
   })
 
   const personnel = mine.personnel.map(p => {
-    if (p.featured && p.id === 'arvind-chopra') return p
+    if (p.assignedMachineId) {
+      const host = machines.find(m => m.id === p.assignedMachineId)
+      if (host?.onMap) {
+        return {
+          ...p,
+          onMap: true,
+          x: clamp(host.x + 4, 8, 92),
+          y: clamp(host.y - 6, 8, 90),
+          zone: host.zone
+        }
+      }
+    }
     if (!p.onMap) return p
     return {
       ...p,
-      x: clamp(p.x + (rng() - 0.5) * 0.5, 8, 92),
-      y: clamp(p.y + (rng() - 0.5) * 0.5, 8, 90)
+      x: clamp(p.x + (rng() - 0.5) * 1.8, 8, 92),
+      y: clamp(p.y + (rng() - 0.5) * 1.8, 8, 90)
     }
   })
 
@@ -251,27 +263,49 @@ export function ingestSiteReport(mine, submission) {
   }
 }
 
-export function addMachineToMine(mine, { type, name }) {
+export function addMachineToMine(mine, payload) {
   const rng = mulberry32(Date.now() >>> 0)
   const used = new Set(mine.machines.map(m => m.id))
-  const spec = MACHINE_TYPES[type] || MACHINE_TYPES.haul_truck
-  const id = uniqueCode(rng, used)
+  const type = MACHINE_TYPES[payload.type] ? payload.type : 'haul_truck'
+  const spec = MACHINE_TYPES[type]
+  let id = (payload.assetId || '').trim().toUpperCase()
+  if (!id || used.has(id)) id = uniqueCode(rng, used)
+  else used.add(id)
+  const trackerId = (payload.trackerId || '').trim() || `GPS-${id}`
+  const model = payload.model || spec.models[0]
+  const path = spec.path
+  const start = TRACK_PATHS[path][0]
+
   const machine = {
     id,
-    name: name || `${spec.models[0]} (manual)`,
-    type: MACHINE_TYPES[type] ? type : 'haul_truck',
-    fuelPercent: 100,
+    name: payload.name?.trim() || `${model} (tracked)`,
+    type,
+    fuelPercent: Number(payload.fuelPercent) || 100,
     payloadKg: 0,
-    payloadCapacityKg: type === 'haul_truck' ? 90000 : 0,
-    status: 'Idle',
-    bench: 'Heavy Workshop',
-    zone: 'Heavy Workshop',
-    x: 82,
-    y: 18,
-    onMap: type === 'haul_truck',
-    featured: false
+    payloadCapacityKg: spec.payloadKg || 0,
+    status: 'Hauling',
+    bench: payload.bench || 'Bench 4 North',
+    zone: payload.zone || MACHINE_ZONES[0],
+    x: start.x,
+    y: start.y,
+    onMap: true,
+    featured: false,
+    tracked: payload.trackLive !== false,
+    trackerId,
+    waypointIndex: 0,
+    speed: pathSpeed(path) + 0.4
   }
-  return { mine: { ...mine, machines: [machine, ...mine.machines] }, machine }
+
+  let personnel = mine.personnel
+  if (payload.operatorId) {
+    personnel = personnel.map(p =>
+      p.id === payload.operatorId
+        ? { ...p, assignedMachineId: id, onMap: true, x: start.x + 4, y: start.y - 6 }
+        : p
+    )
+  }
+
+  return { mine: { ...mine, machines: [machine, ...mine.machines], personnel }, machine }
 }
 
 export function addPersonToMine(mine, payload) {
@@ -351,9 +385,12 @@ export function liveStats(mine) {
   const operators = mine.personnel.filter(p => p.roleGroup === 'operators').length
   const geologists = mine.personnel.filter(p => p.roleGroup === 'geologists').length
   const safety = mine.personnel.filter(p => p.roleGroup === 'safety').length
-  const haulers = mine.machines.filter(m => m.type === 'haul_truck').length
-  const excavators = mine.machines.filter(m => m.type === 'excavator').length
-  const drills = mine.machines.filter(m => m.type === 'drill').length
+  const haulers = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'haulers').length
+  const excavators = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'excavators').length
+  const loaders = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'loaders').length
+  const dozers = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'dozers').length
+  const drills = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'drills').length
+  const support = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'support').length
   const queued = mine.tippers.filter(t => t.status === 'queued').length
   const unread = mine.messages.filter(m => m.unread).length
   const x17 = mine.plants.find(p => p.id === 'X17')
@@ -363,7 +400,10 @@ export function liveStats(mine) {
     machinesTotal: mine.machines.length,
     haulers,
     excavators,
+    loaders,
+    dozers,
     drills,
+    support,
     onSite,
     personnelTotal: mine.personnel.length,
     operators,

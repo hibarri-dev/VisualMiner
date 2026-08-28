@@ -70,7 +70,11 @@ export default function AppLayout({ children }) {
       </div>
 
       <SubmitReportModal isOpen={activeModal === 'submit-report'} onClose={handleCloseModal} />
-      <AddMachineModal isOpen={activeModal === 'add-machine'} onClose={handleCloseModal} />
+      <AddMachineModal
+        isOpen={activeModal === 'add-machine'}
+        onClose={handleCloseModal}
+        onTracked={() => setActiveTab('maps')}
+      />
       <AddPersonModal isOpen={activeModal === 'add-person'} onClose={handleCloseModal} />
     </div>
   )

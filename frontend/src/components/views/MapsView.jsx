@@ -1,22 +1,35 @@
 import React from 'react'
-import { Truck, Wrench, Activity } from 'lucide-react'
+import { Truck, Wrench, Activity, Layers, Droplets, Fuel, Mountain } from 'lucide-react'
 import { useVisibleMine } from '../../context/useMineData'
-import { personForMachine } from '../../data'
+import { MACHINE_TYPES, personForMachine } from '../../data'
 import StatusBadge from '../dashboard/StatusBadge'
+
+function TypeIcon({ type, selected }) {
+  const cls = selected ? 'w-6 h-6 text-[#78350f]' : 'w-3.5 h-3.5 text-[#78350f]'
+  if (type === 'excavator' || type === 'shovel') return <Wrench className={cls} />
+  if (type === 'drill') return <Activity className={cls} />
+  if (type === 'front_loader') return <Layers className={cls} />
+  if (type === 'dozer' || type === 'grader') return <Mountain className={cls} />
+  if (type === 'water_truck') return <Droplets className={cls} />
+  if (type === 'fuel_truck') return <Fuel className={cls} />
+  return <Truck className={`${cls} ${selected ? 'w-7 h-7 fill-[#fde68a]' : 'fill-[#fde68a]'}`} />
+}
 
 function MachineMarker({ machine, selected, operator, onSelect }) {
   return (
     <div
-      className="absolute flex flex-col items-center z-10"
+      className="absolute flex flex-col items-center z-10 transition-[left,top] duration-[2400ms] ease-linear"
       style={{ left: `${machine.x}%`, top: `${machine.y}%`, transform: 'translate(-50%, -50%)' }}
     >
       {selected && (
-        <div className="mb-2 w-48 p-3.5 rounded-2xl bg-white text-slate-900 shadow-2xl border border-white/80 font-sans pointer-events-auto select-text">
+        <div className="mb-2 w-52 p-3.5 rounded-2xl bg-white text-slate-900 shadow-2xl border border-white/80 font-sans pointer-events-auto select-text">
           <div className="font-bold text-[14px] text-slate-900 tracking-tight">{machine.id}</div>
           <div className="mt-1 space-y-0.5 text-[12px] text-slate-600 font-medium">
+            <div>{MACHINE_TYPES[machine.type]?.label || machine.type}</div>
             <div>Fuel Tank: {Math.round(machine.fuelPercent)}%</div>
             <div>Payload: {machine.payloadKg}kg</div>
             <div>{machine.status}</div>
+            {machine.trackerId && <div className="text-slate-400 font-mono text-[11px]">{machine.trackerId}</div>}
             {operator && <div className="text-slate-400 font-normal">{operator.name}</div>}
           </div>
         </div>
@@ -30,13 +43,7 @@ function MachineMarker({ machine, selected, operator, onSelect }) {
           selected ? 'w-14 h-10' : 'w-8 h-6 opacity-90 hover:opacity-100'
         }`}
       >
-        {machine.type === 'excavator' ? (
-          <Wrench className={selected ? 'w-6 h-6 text-[#78350f]' : 'w-3.5 h-3.5 text-[#78350f]'} />
-        ) : machine.type === 'drill' ? (
-          <Activity className={selected ? 'w-6 h-6 text-[#78350f]' : 'w-3.5 h-3.5 text-[#78350f]'} />
-        ) : (
-          <Truck className={selected ? 'w-7 h-7 text-[#78350f] fill-[#fde68a]' : 'w-4 h-4 text-[#78350f] fill-[#fde68a]'} />
-        )}
+        <TypeIcon type={machine.type} selected={selected} />
       </button>
     </div>
   )
@@ -45,7 +52,7 @@ function MachineMarker({ machine, selected, operator, onSelect }) {
 function PersonMarker({ person, selected, onSelect }) {
   return (
     <div
-      className="absolute flex flex-col items-center z-10"
+      className="absolute flex flex-col items-center z-10 transition-[left,top] duration-[2400ms] ease-linear"
       style={{ left: `${person.x}%`, top: `${person.y}%`, transform: 'translate(-50%, -50%)' }}
     >
       {selected && (

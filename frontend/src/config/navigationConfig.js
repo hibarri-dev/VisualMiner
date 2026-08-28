@@ -106,9 +106,12 @@ export const NAVIGATION_ITEMS = [
     quickAction: { label: 'Add Machine', modalId: 'add-machine' },
     children: [
       { id: 'mach-fleet', label: 'All Yellow Fleet (48)', icon: Truck },
-      { id: 'mach-haulers', label: 'Haul Trucks (26)', icon: Truck },
-      { id: 'mach-excavators', label: 'Excavators & Shovels (14)', icon: Wrench },
-      { id: 'mach-drills', label: 'Drill Rigs (8)', icon: Activity }
+      { id: 'mach-haulers', label: 'Dump Trucks (16)', icon: Truck },
+      { id: 'mach-excavators', label: 'Excavators & Shovels (11)', icon: Wrench },
+      { id: 'mach-loaders', label: 'Front Loaders (6)', icon: Boxes },
+      { id: 'mach-dozers', label: 'Dozers & Graders (6)', icon: Mountain },
+      { id: 'mach-drills', label: 'Drill Rigs (5)', icon: Activity },
+      { id: 'mach-support', label: 'Water & Fuel (4)', icon: Layers }
     ]
   },
   {
@@ -208,9 +211,12 @@ export function getNavigationItems(stats) {
         badge: `${stats.machinesActive} Active`,
         children: item.children.map(child => {
           if (child.id === 'mach-fleet') return { ...child, label: `All Yellow Fleet (${stats.machinesTotal})` }
-          if (child.id === 'mach-haulers') return { ...child, label: `Haul Trucks (${stats.haulers})` }
+          if (child.id === 'mach-haulers') return { ...child, label: `Dump Trucks (${stats.haulers})` }
           if (child.id === 'mach-excavators') return { ...child, label: `Excavators & Shovels (${stats.excavators})` }
+          if (child.id === 'mach-loaders') return { ...child, label: `Front Loaders (${stats.loaders})` }
+          if (child.id === 'mach-dozers') return { ...child, label: `Dozers & Graders (${stats.dozers})` }
           if (child.id === 'mach-drills') return { ...child, label: `Drill Rigs (${stats.drills})` }
+          if (child.id === 'mach-support') return { ...child, label: `Water & Fuel (${stats.support})` }
           return child
         })
       }
