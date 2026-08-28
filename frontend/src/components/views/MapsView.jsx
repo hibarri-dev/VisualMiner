@@ -31,8 +31,8 @@ export default function MapsView({ currentRole }) {
   const mapPeople = mine.personnel.filter(p => p.onMap)
 
   return (
-    <div className="flex-1 flex flex-col gap-4 p-5 overflow-y-auto bg-[#0d0e12]">
-      <div className="relative flex-1 min-h-[320px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl select-none">
+    <div className="flex-1 flex flex-col gap-3 sm:gap-4 p-3 sm:p-5 overflow-y-auto bg-[#0d0e12]">
+      <div className="relative flex-1 min-h-[260px] sm:min-h-[320px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl select-none">
         <div className="absolute left-4 top-3 z-20 flex items-center gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Machine monitoring</span>
           <StatusBadge value={`${mapMachines.length} on pit`} />

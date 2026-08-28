@@ -31,7 +31,7 @@ export default function OpsView({ activeTab, currentRole }) {
 
   return (
     <ViewFrame eyebrow={mine.site.name} title={title} description={description}>
-      <div className="grid grid-cols-3 gap-3 shrink-0">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
         <Kpi
           label="Extraction"
           value={`${stats.extractionTph} t/h`}
