@@ -6,6 +6,7 @@ VisualMiner is an intelligent analytics & visual mining platform built with Reac
 
 ```
 VisualMiner/
+
 └── frontend/      # React (JavaScript) + Vite + Tailwind CSS application
 ```
 
