@@ -64,6 +64,13 @@ function pickInside(rng, x, y, id) {
   return best
 }
 
+// How long a drive leg is allowed to take: real travel time for the picked distance
+// plus a buffer, so the machine actually arrives instead of getting cut off mid-drive
+// (a short fixed window was stranding trucks partway, which read as freeze-then-teleport).
+function driveDuration(fromX, fromY, toX, toY, speed) {
+  return Math.hypot(toX - fromX, toY - fromY) / speed + 1.2
+}
+
 // Fully random starting spot anywhere in bounds, rejection-sampled against whatever
 // fleet positions already exist so machines don't spawn on top of each other.
 function pickHome(rng, id) {
@@ -96,10 +103,10 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
       y,
       tx: startWork ? x : next.x,
       ty: startWork ? y : next.y,
-      yaw: rng() * Math.PI * 2,
+      yaw: null,
       mode: startWork ? 'work' : 'drive',
       timer: rng() * 1.4,
-      driveFor: 3 + rng() * 2,
+      driveFor: driveDuration(x, y, next.x, next.y, driveSpeed(machine.type)),
       workFor: 3 + rng() * 1.2,
       status: startWork ? workLabel(machine.type) : driveLabel(machine.type)
     }
@@ -121,14 +128,14 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
 
     if (!broken) {
       if (drive.mode === 'work') {
-        if (spec?.path === 'bench') {
+        if (spec?.path === 'bench' && drive.yaw != null) {
           drive.yaw += Math.sin(state.clock.elapsedTime * 1.15 + drive.workFor) * 0.006
         }
         if (drive.timer >= drive.workFor) {
           const next = pickInside(drive.rng, drive.x, drive.y, machine.id)
           drive.mode = 'drive'
           drive.timer = 0
-          drive.driveFor = 3 + drive.rng() * 2
+          drive.driveFor = driveDuration(drive.x, drive.y, next.x, next.y, driveSpeed(machine.type))
           drive.tx = next.x
           drive.ty = next.y
           drive.status = driveLabel(machine.type)
@@ -161,20 +168,29 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
     const wy = sampleQuarryHeight(wx, wz) + 0.002
     g.position.set(wx, wy, wz)
 
-    if (drive.mode === 'drive' && !broken) {
+    if (!broken) {
       const look = quarryMarkerPosition(drive.tx, drive.ty, 0)
       const lx = look[0] - wx
       const lz = look[2] - wz
       if (Math.hypot(lx, lz) > 1e-4) {
         const yaw = Math.atan2(lx, lz)
-        let diff = yaw - drive.yaw
-        while (diff > Math.PI) diff -= Math.PI * 2
-        while (diff < -Math.PI) diff += Math.PI * 2
-        drive.yaw += diff * (1 - Math.exp(-clampedDt * 2.4))
+        if (drive.yaw == null) {
+          // Snap on the first frame; lerping in from a random angle made every
+          // machine visibly spin for the first few seconds after load.
+          drive.yaw = yaw
+        } else if (drive.mode === 'drive') {
+          let diff = yaw - drive.yaw
+          while (diff > Math.PI) diff -= Math.PI * 2
+          while (diff < -Math.PI) diff += Math.PI * 2
+          drive.yaw += diff * (1 - Math.exp(-clampedDt * 2.4))
+        }
+      } else if (drive.yaw == null) {
+        drive.yaw = 0
       }
     }
+    if (drive.yaw == null) drive.yaw = 0
 
-    const slope = quarrySlope(wx, wz, size * 0.38)
+    const slope = quarrySlope(wx, wz, size * 0.38, drive.yaw)
     g.rotation.order = 'YXZ'
     g.rotation.y = drive.yaw
     g.rotation.x = slope.pitch
@@ -206,12 +222,12 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
       )}
       {selected && (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.28, 0.34, 40]} />
+          <ringGeometry args={[size * 0.8, size * 0.95, 40]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.85} />
         </mesh>
       )}
       {selected && (
-        <Html position={[0, 0.95, 0]} center zIndexRange={[10, 0]}>
+        <Html position={[0, size * 1.5, 0]} center zIndexRange={[10, 0]}>
           <div className="w-36 p-2 rounded-lg bg-[#282b36] text-slate-200 shadow-xl border border-[#3b4050] font-sans pointer-events-auto select-text">
             <div className="font-bold text-[10px] text-white tracking-tight leading-tight">{machine.id}</div>
             <div className="mt-0.5 space-y-0.5 text-[9px] leading-snug text-slate-300 font-medium">

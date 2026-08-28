@@ -14,8 +14,8 @@ import {
 
 export function MineDataProvider({ children }) {
   const [mine, setMine] = useState(() => createMineState())
-  const [selectedMachineId, setSelectedMachineId] = useState('X7UIH53')
-  const [selectedPersonId, setSelectedPersonId] = useState('arvind-chopra')
+  const [selectedMachineId, setSelectedMachineId] = useState(null)
+  const [selectedPersonId, setSelectedPersonId] = useState(null)
   const [selectedReportId, setSelectedReportId] = useState('rep-assay-204')
   const mineRef = useRef(mine)
 

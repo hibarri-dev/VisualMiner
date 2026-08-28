@@ -72,7 +72,7 @@ export default function PersonMarker3D({ person, selected, onSelect, slot = 0 })
       y,
       tx: walking ? next.x : x,
       ty: walking ? next.y : y,
-      yaw: rng() * Math.PI * 2,
+      yaw: null,
       mode: walking ? 'walk' : 'check',
       timer: rng() * 1.2,
       walkFor: 4 + rng() * 3,
@@ -128,20 +128,25 @@ export default function PersonMarker3D({ person, selected, onSelect, slot = 0 })
     const wy = sampleQuarryHeight(wx, wz)
     g.position.set(wx, wy, wz)
 
-    if (drive.mode === 'walk') {
-      const look = quarryMarkerPosition(drive.tx, drive.ty, 0)
-      const lx = look[0] - wx
-      const lz = look[2] - wz
-      if (Math.hypot(lx, lz) > 1e-4) {
-        const yaw = Math.atan2(lx, lz)
+    const look = quarryMarkerPosition(drive.tx, drive.ty, 0)
+    const lx = look[0] - wx
+    const lz = look[2] - wz
+    if (Math.hypot(lx, lz) > 1e-4) {
+      const yaw = Math.atan2(lx, lz)
+      if (drive.yaw == null) {
+        // Snap on the first frame; lerping in from a random angle made everyone
+        // visibly spin for the first few seconds after load.
+        drive.yaw = yaw
+      } else if (drive.mode === 'walk') {
         let diff = yaw - drive.yaw
         while (diff > Math.PI) diff -= Math.PI * 2
         while (diff < -Math.PI) diff += Math.PI * 2
         drive.yaw += diff * (1 - Math.exp(-clampedDt * 3.2))
       }
     }
+    if (drive.yaw == null) drive.yaw = 0
 
-    const slope = quarrySlope(wx, wz, 0.05)
+    const slope = quarrySlope(wx, wz, 0.05, drive.yaw)
     g.rotation.order = 'YXZ'
     g.rotation.y = drive.yaw
     g.rotation.x = slope.pitch * 0.35
