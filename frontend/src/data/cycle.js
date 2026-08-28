@@ -65,7 +65,9 @@ export function createOreBodies() {
     { id: 'qz-2', siteId: 'kolar-north', name: 'QZ-2 Footwall', commodity: 'Gold', headGrade: '1.1 g/t Au', status: 'deferred_low_grade', usesProspecting: true },
     { id: 'mg1', siteId: 'bellary-chrome', name: 'MG1 Chromite (RB1 analogue)', commodity: 'Chrome', headGrade: '24% Cr2O3', status: 'extracting', usesProspecting: true },
     { id: 'mg2', siteId: 'bellary-chrome', name: 'MG2 Chromite (RB2 analogue)', commodity: 'Chrome', headGrade: '18% Cr2O3', status: 'watch_low_grade', usesProspecting: true },
-    { id: 'anth-a', siteId: 'talcher-anthracite', name: 'Anthracite Seam A', commodity: 'Anthracite', headGrade: 'Fixed C 86%', status: 'extracting_sell_raw', sellsRaw: true }
+    { id: 'anth-a', siteId: 'talcher-anthracite', name: 'Anthracite Seam A', commodity: 'Anthracite', headGrade: 'Fixed C 86%', status: 'extracting_sell_raw', sellsRaw: true },
+    { id: 'afz-keats', siteId: 'queensway-nfg', name: 'Keats / Iceberg (AFZ)', commodity: 'Gold', headGrade: 'Public composites ≥1 g/t Au', status: 'prospecting', usesProspecting: true },
+    { id: 'afz-dome', siteId: 'queensway-nfg', name: 'Golden Dome / Dome', commodity: 'Gold', headGrade: '343 g/t Au over 2.15 m', status: 'prospecting', usesProspecting: true }
   ]
 }
 
@@ -105,7 +107,10 @@ export function createLabTests() {
     { id: 'lab-ch-15', siteId: 'bellary-conc-lab', sample: 'Conc 42% pile', result: '41.6% Cr2O3 (off spec vs 42%)', stage: 'testing', status: 'watch', at: '09:02' },
     { id: 'lab-ch-16', siteId: 'bellary-conc-lab', sample: 'Conc 50% pile', result: '50.2% Cr2O3', stage: 'testing', status: 'cleared', at: '09:04' },
     { id: 'lab-ch-17', siteId: 'bellary-conc-lab', sample: 'Conc 60% pile', result: 'no tonnes on pad', stage: 'testing', status: 'watch', at: '09:05' },
-    { id: 'lab-cde', siteId: 'chitradurga-prospect', sample: 'Hole CD-18', result: '1.85% Cu, 0.22% Co', stage: 'prospecting', status: 'feasibility', at: 'Today' }
+    { id: 'lab-cde', siteId: 'chitradurga-prospect', sample: 'Hole CD-18', result: '1.85% Cu, 0.22% Co', stage: 'prospecting', status: 'feasibility', at: 'Today' },
+    { id: 'lab-nfg-dome', siteId: 'queensway-nfg', sample: 'NFGC-24-2158 Golden Dome', result: '343 g/t Au over 2.15 m', stage: 'prospecting', status: 'cleared', at: '2024-10-31' },
+    { id: 'lab-nfg-ksd', siteId: 'queensway-nfg', sample: 'NFGC-24-2112-W5 Keats South Deep', result: '10.3 g/t Au over 8.20 m', stage: 'prospecting', status: 'cleared', at: '2025-04-29' },
+    { id: 'lab-nfg-seismic', siteId: 'queensway-nfg', sample: 'NFGC-24-2094 Deep Seismic Target', result: '1.50 g/t Au over 7.00 m', stage: 'prospecting', status: 'cleared', at: '2024-07-11' }
   ]
 }
 

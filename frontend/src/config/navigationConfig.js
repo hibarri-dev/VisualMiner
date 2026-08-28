@@ -63,7 +63,7 @@ export const NAVIGATION_ITEMS = [
     icon: Mountain,
     description: 'Active open pit models, telemetry feeds & geofences',
     children: [
-      { id: 'mines-models', label: '3D Mine Models (nanoCAD/CAD)', icon: Layers, badge: 'CAD' },
+      { id: 'mines-models', label: '3D Mine Models (NI 43-101)', icon: Layers, badge: 'Live' },
       {
         id: 'mines-feeds',
         label: 'Data Feed APIs',
