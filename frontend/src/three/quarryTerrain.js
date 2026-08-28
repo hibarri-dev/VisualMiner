@@ -11,7 +11,7 @@ export const quarryFit = {
 }
 
 const { cols, rows, heights, cover } = data
-const INSET = 0.22
+const INSET = 0.2
 const x0 = ((data.coverMinIx / (cols - 1)) * 2 - 1) * QUARRY_HALF_W
 const x1 = ((data.coverMaxIx / (cols - 1)) * 2 - 1) * QUARRY_HALF_W
 const z0 = ((data.coverMinIz / (rows - 1)) * 2 - 1) * QUARRY_HALF_D
@@ -95,7 +95,22 @@ export function sampleQuarryHeight(x, z) {
   )
 }
 
-export function quarryMarkerPosition(mapX, mapY, lift = 0.02) {
+export function clampToQuarry(x, z) {
+  return snapToLand(x, z)
+}
+
+export function quarrySlope(x, z, span = 0.1) {
+  const hL = sampleQuarryHeight(x - span, z)
+  const hR = sampleQuarryHeight(x + span, z)
+  const hD = sampleQuarryHeight(x, z - span)
+  const hU = sampleQuarryHeight(x, z + span)
+  return {
+    pitch: Math.atan2(hD - hU, span * 2),
+    roll: Math.atan2(hR - hL, span * 2)
+  }
+}
+
+export function quarryMarkerPosition(mapX, mapY, lift = 0.003) {
   const x = mapMinX + (Math.max(0, Math.min(100, mapX)) / 100) * (mapMaxX - mapMinX)
   const z = mapMinZ + (Math.max(0, Math.min(100, mapY)) / 100) * (mapMaxZ - mapMinZ)
   const [sx, sz] = snapToLand(x, z)

@@ -46,10 +46,11 @@ export default function MapsView({ currentRole }) {
           onPointerMissed={() => setSelectedMachineId(null)}
         >
           <QuarryGltf3D />
-          {mapMachines.map(machine => (
+          {mapMachines.map((machine, i) => (
             <MachineMarker3D
               key={machine.id}
               machine={machine}
+              slot={i}
               selected={machine.id === selectedMachineId}
               operator={personForMachine(mine.personnel, machine.id)}
               onSelect={setSelectedMachineId}
