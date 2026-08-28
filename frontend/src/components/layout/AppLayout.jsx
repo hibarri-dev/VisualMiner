@@ -2,10 +2,14 @@ import React, { useState } from 'react'
 import Sidebar from '../navigation/Sidebar'
 import TopHeader from '../navigation/TopHeader'
 import AiReportPanel from '../dashboard/AiReportPanel'
-import DefaultSlotView from '../views/DefaultSlotView'
+import Viewport from '../views/Viewport'
 import SubmitReportModal from '../modals/SubmitReportModal'
+import AddMachineModal from '../modals/AddMachineModal'
+import AddPersonModal from '../modals/AddPersonModal'
+import { useMineData } from '../../context/useMineData'
 
 export default function AppLayout({ children }) {
+  const { selectSearchResult } = useMineData()
   const [activeTab, setActiveTab] = useState('maps')
   const [activeSubTab, setActiveSubTab] = useState('mines-models')
   const [currentRole, setCurrentRole] = useState('executive')
@@ -22,10 +26,9 @@ export default function AppLayout({ children }) {
   }
 
   const handleSearchResultClick = result => {
-    if (result.type === 'machine') {
-      setActiveTab('machines')
-    } else if (result.type === 'worker') {
-      setActiveTab('humans')
+    selectSearchResult(result)
+    if (result.type === 'machine' || result.type === 'worker') {
+      setActiveTab('maps')
     } else if (result.type === 'report') {
       setActiveTab('site-reports')
     } else if (result.type === 'zone') {
@@ -33,9 +36,10 @@ export default function AppLayout({ children }) {
     }
   }
 
+  const viewportProps = { activeTab, activeSubTab, currentRole, onOpenModal: handleOpenModal }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#0c0d10] font-sans text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
-      {/* 1. Pratik's Navigation Sidebar */}
       <Sidebar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -46,9 +50,7 @@ export default function AppLayout({ children }) {
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
-      {/* 2. Main Content & Top Header Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Header Navigation UX */}
         <TopHeader
           currentRole={currentRole}
           onSelectRole={setCurrentRole}
@@ -57,19 +59,9 @@ export default function AppLayout({ children }) {
           onSelectSearchResult={handleSearchResultClick}
         />
 
-        {/* Viewport Workspace Slot (Allows Sahil's 3D, Vasanth's telemetry, Raven's reports to plug in) */}
         <div className="flex-1 flex min-w-0 overflow-hidden relative">
-          {children ? (
-            children({ activeTab, activeSubTab, currentRole, onOpenModal: handleOpenModal })
-          ) : (
-            <DefaultSlotView
-              activeTab={activeTab}
-              activeSubTab={activeSubTab}
-              onOpenModal={handleOpenModal}
-            />
-          )}
+          {children ? children(viewportProps) : <Viewport {...viewportProps} />}
 
-          {/* AI Report Companion Panel (matching design layout) */}
           <AiReportPanel
             activeTab={activeTab}
             onOpenReportModal={() => handleOpenModal('submit-report')}
@@ -77,11 +69,9 @@ export default function AppLayout({ children }) {
         </div>
       </div>
 
-      {/* Site Report AI Modal */}
-      <SubmitReportModal
-        isOpen={activeModal === 'submit-report'}
-        onClose={handleCloseModal}
-      />
+      <SubmitReportModal isOpen={activeModal === 'submit-report'} onClose={handleCloseModal} />
+      <AddMachineModal isOpen={activeModal === 'add-machine'} onClose={handleCloseModal} />
+      <AddPersonModal isOpen={activeModal === 'add-person'} onClose={handleCloseModal} />
     </div>
   )
 }

@@ -180,3 +180,70 @@ export const NAVIGATION_ITEMS = [
     description: 'Radio dispatch channels & AI safety alerts'
   }
 ]
+
+export function getNavigationItems(stats) {
+  if (!stats) return NAVIGATION_ITEMS
+
+  return NAVIGATION_ITEMS.map(item => {
+    if (item.id === 'processing') {
+      return {
+        ...item,
+        children: item.children.map(child => {
+          if (child.id === 'proc-crushing') return { ...child, label: `Crushing (${stats.crushingTph} t/h)` }
+          if (child.id === 'proc-screening') return { ...child, label: `Screening (${stats.screeningTph} t/h)` }
+          if (child.id === 'proc-yield') {
+            const sign = stats.weekTrendPercent > 0 ? '+' : ''
+            return { ...child, badge: `${sign}${stats.weekTrendPercent}%` }
+          }
+          return child
+        })
+      }
+    }
+    if (item.id === 'shipments') {
+      return { ...item, badge: `${stats.queuedTippers} Queued` }
+    }
+    if (item.id === 'machines') {
+      return {
+        ...item,
+        badge: `${stats.machinesActive} Active`,
+        children: item.children.map(child => {
+          if (child.id === 'mach-fleet') return { ...child, label: `All Yellow Fleet (${stats.machinesTotal})` }
+          if (child.id === 'mach-haulers') return { ...child, label: `Haul Trucks (${stats.haulers})` }
+          if (child.id === 'mach-excavators') return { ...child, label: `Excavators & Shovels (${stats.excavators})` }
+          if (child.id === 'mach-drills') return { ...child, label: `Drill Rigs (${stats.drills})` }
+          return child
+        })
+      }
+    }
+    if (item.id === 'humans') {
+      return {
+        ...item,
+        badge: `${stats.onSite} on Site`,
+        children: item.children.map(child => {
+          if (child.id === 'hum-active') return { ...child, label: `Active Personnel (${stats.onSite})` }
+          if (child.id === 'hum-operators') return { ...child, label: `Machine Operators (${stats.operators})` }
+          if (child.id === 'hum-geologists') return { ...child, label: `Geologists & Engineers (${stats.geologists})` }
+          if (child.id === 'hum-safety') return { ...child, label: `Safety Supervisors (${stats.safety})` }
+          return child
+        })
+      }
+    }
+    if (item.id === 'production') {
+      return { ...item, badge: `${stats.extractionTph} t/h` }
+    }
+    if (item.id === 'messaging') {
+      return { ...item, badge: `${stats.unreadMessages} new` }
+    }
+    if (item.id === 'mines') {
+      return {
+        ...item,
+        children: item.children.map(child => {
+          if (child.id === 'mines-feeds') return { ...child, badge: `${stats.feeds} feeds` }
+          if (child.id === 'mines-geofence') return { ...child, badge: `${stats.geofencesActive} active` }
+          return child
+        })
+      }
+    }
+    return item
+  })
+}

@@ -1,13 +1,21 @@
 import React from 'react'
 import AppLayout from './components/layout/AppLayout'
+import Viewport from './components/views/Viewport'
+import { MineDataProvider } from './context/MineDataContext'
 
 export default function App() {
   return (
-    <AppLayout>
-      {({ activeTab, activeSubTab, currentRole, onOpenModal }) => {
-        // Modular viewport switcher ready for teammates
-        return null // defaults to DefaultSlotView in AppLayout
-      }}
-    </AppLayout>
+    <MineDataProvider>
+      <AppLayout>
+        {({ activeTab, activeSubTab, currentRole, onOpenModal }) => (
+          <Viewport
+            activeTab={activeTab}
+            activeSubTab={activeSubTab}
+            currentRole={currentRole}
+            onOpenModal={onOpenModal}
+          />
+        )}
+      </AppLayout>
+    </MineDataProvider>
   )
 }

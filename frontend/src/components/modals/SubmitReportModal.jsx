@@ -2,28 +2,13 @@ import React, { useState } from 'react'
 import {
   X,
   Sparkles,
-  FileText,
-  Upload,
-  CheckCircle2,
-  AlertCircle,
-  Cpu,
-  Layers
+  CheckCircle2
 } from 'lucide-react'
+import { REPORT_TYPES } from '../../data'
+import { useMineData } from '../../context/useMineData'
 
-const REPORT_TYPES = [
-  { id: 'inspection', name: 'Inspection Reports', desc: 'Equipment condition and bench integrity' },
-  { id: 'maintenance', name: 'Maintenance Reports', desc: 'Breakdown reports and spare parts logs' },
-  { id: 'geological', name: 'Geological Reports', desc: 'Ore grade, lithology & fault line maps' },
-  { id: 'blast', name: 'Blast Reports', desc: 'Pattern fragmentation & vibration assays' },
-  { id: 'safety', name: 'Safety Reports', desc: 'Incident logs, PPE adherence & hazard flags' },
-  { id: 'engineering', name: 'Engineering Drawings', desc: 'nanoCAD/CAD pit design alterations' },
-  { id: 'sops', name: 'SOPs', desc: 'Standard Operating Procedures & checklists' },
-  { id: 'permits', name: 'Permits', desc: 'Environmental & blasting statutory approvals' },
-  { id: 'environmental', name: 'Environmental Reports', desc: 'Dust, water runoff & noise sensors' },
-  { id: 'contractor', name: 'Contractor Reports', desc: 'Third-party haulage & drilling logs' }
-]
-
-export default function SubmitReportModal({ isOpen, onClose, onReportSubmitted }) {
+export default function SubmitReportModal({ isOpen, onClose }) {
+  const { ingestReport } = useMineData()
   const [selectedType, setSelectedType] = useState('geological')
   const [reportTitle, setReportTitle] = useState('')
   const [notes, setNotes] = useState('')
@@ -38,15 +23,13 @@ export default function SubmitReportModal({ isOpen, onClose, onReportSubmitted }
 
     // Simulate AI model interpretation and dynamic parameter adjustment
     setTimeout(() => {
+      const result = ingestReport({
+        type: selectedType,
+        title: reportTitle,
+        notes
+      })
       setIsProcessingAi(false)
-      const mockResult = {
-        summary: `AI has analyzed the ${selectedType} report. Geological yield model updated with +3.2% efficiency adjustment.`,
-        predictedYieldChange: '+3.2%',
-        geofenceAffected: 'Bench 4 North',
-        timestamp: new Date().toLocaleTimeString()
-      }
-      setAiResult(mockResult)
-      if (onReportSubmitted) onReportSubmitted(mockResult)
+      setAiResult(result)
     }, 1200)
   }
 
@@ -176,7 +159,7 @@ export default function SubmitReportModal({ isOpen, onClose, onReportSubmitted }
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Synced to Feeds:</span>
-                  <span className="text-slate-300">CAT Fleet, Deswik, Micromine</span>
+                  <span className="text-slate-300">{aiResult.syncedFeeds}</span>
                 </div>
               </div>
               <button

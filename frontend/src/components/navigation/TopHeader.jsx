@@ -11,6 +11,7 @@ import {
   CloudSun
 } from 'lucide-react'
 import { ROLES } from '../../config/navigationConfig'
+import { useVisibleMine } from '../../context/useMineData'
 
 export default function TopHeader({
   currentRole,
@@ -23,6 +24,7 @@ export default function TopHeader({
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchInputRef = useRef(null)
+  const { searchIndex } = useVisibleMine(currentRole)
 
   useEffect(() => {
     const handleKeyDown = e => {
@@ -39,20 +41,14 @@ export default function TopHeader({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const quickSearchSuggestions = [
-    { type: 'machine', title: 'X7UIH53 (Haul Truck)', subtitle: 'Payload: 6700kg • Fuel: 87%', tag: 'Dumping' },
-    { type: 'worker', title: 'Arvind Chopra', subtitle: 'Machine Operator • Clearance L2', tag: 'Pit Bench 4' },
-    { type: 'zone', title: 'Crusher Unit X17', subtitle: 'Throughput 10 t/h • Screening 5 t/h', tag: 'Alert' },
-    { type: 'report', title: 'Geological Blast Assay 204', subtitle: 'AI model updated • Yield +5%', tag: 'Site Report' }
-  ]
-
   const filteredSuggestions = searchQuery.trim()
-    ? quickSearchSuggestions.filter(
+    ? searchIndex.filter(
         s =>
           s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.subtitle.toLowerCase().includes(searchQuery.toLowerCase())
+          s.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          String(s.id).toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : quickSearchSuggestions
+    : searchIndex.slice(0, 8)
 
   return (
     <header className="h-16 bg-[#121316] border-b border-[#1e2027] px-6 flex items-center justify-between text-slate-200 z-20">
@@ -82,9 +78,9 @@ export default function TopHeader({
               <span className="font-mono text-[9px] text-slate-400">ESC</span>
             </div>
             <div className="space-y-1 mt-1">
-              {filteredSuggestions.map((item, idx) => (
+              {filteredSuggestions.map(item => (
                 <div
-                  key={idx}
+                  key={`${item.type}-${item.id}`}
                   onClick={() => {
                     if (onSelectSearchResult) onSelectSearchResult(item)
                     setIsSearchFocused(false)
