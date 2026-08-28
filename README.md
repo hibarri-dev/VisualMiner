@@ -4,6 +4,7 @@ VisualMiner is an intelligent analytics & visual mining platform built with Reac
 
 ## Project Structure
 
+
 ```
 VisualMiner/
 
