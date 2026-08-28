@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useVisibleMine } from '../../context/useMineData'
 import { personForMachine } from '../../data'
 import StatusBadge from '../dashboard/StatusBadge'
 import Scene3D from '../three/Scene3D'
 import QuarryGltf3D from '../three/QuarryGltf3D'
+import LidarTerrain3D from '../three/LidarTerrain3D'
+import ViewModeToggle from '../three/ViewModeToggle'
 import MachineMarker3D from '../three/MachineMarker3D'
 import PersonMarker3D from '../three/PersonMarker3D'
 import { preloadGltfs } from '../three/FittedGltf'
@@ -12,6 +14,8 @@ import { GLB_PRELOAD } from '../../three/modelCatalog'
 preloadGltfs(GLB_PRELOAD)
 
 export default function MapsView({ currentRole }) {
+  const [machineMode, setMachineMode] = useState('daylight')
+  const [personMode, setPersonMode] = useState('daylight')
   const {
     mine,
     selectedMachineId,
@@ -35,6 +39,9 @@ export default function MapsView({ currentRole }) {
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Machine monitoring</span>
           <StatusBadge value={`${mapMachines.length} on pit`} />
         </div>
+        <div className="absolute right-3 top-3 z-20">
+          <ViewModeToggle mode={machineMode} onChange={setMachineMode} />
+        </div>
         <Scene3D
           cameraPosition={[0.2, 3.4, 4.2]}
           sunPosition={[10, 12, 4]}
@@ -43,9 +50,10 @@ export default function MapsView({ currentRole }) {
           maxDistance={22}
           fogNear={18}
           fogFar={42}
+          variant={machineMode}
           onPointerMissed={() => setSelectedMachineId(null)}
         >
-          <QuarryGltf3D />
+          {machineMode === 'lidar' ? <LidarTerrain3D /> : <QuarryGltf3D />}
           {mapMachines.map((machine, i) => (
             <MachineMarker3D
               key={machine.id}
@@ -54,6 +62,7 @@ export default function MapsView({ currentRole }) {
               selected={machine.id === selectedMachineId}
               operator={personForMachine(mine.personnel, machine.id)}
               onSelect={setSelectedMachineId}
+              thermal={machineMode === 'lidar'}
             />
           ))}
         </Scene3D>
@@ -64,6 +73,9 @@ export default function MapsView({ currentRole }) {
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Personnel monitoring</span>
           <StatusBadge value={`${Math.min(mapPeople.length, 14)} tagged`} />
         </div>
+        <div className="absolute right-3 top-3 z-20">
+          <ViewModeToggle mode={personMode} onChange={setPersonMode} />
+        </div>
         <Scene3D
           cameraPosition={[-2.1, 3.1, 4.5]}
           sunPosition={[-6, 11, 7]}
@@ -72,9 +84,10 @@ export default function MapsView({ currentRole }) {
           maxDistance={28}
           fogNear={18}
           fogFar={42}
+          variant={personMode}
           onPointerMissed={() => setSelectedPersonId(null)}
         >
-          <QuarryGltf3D />
+          {personMode === 'lidar' ? <LidarTerrain3D /> : <QuarryGltf3D />}
           {mapPeople.slice(0, 14).map((person, i) => (
             <PersonMarker3D
               key={person.id}
@@ -82,6 +95,7 @@ export default function MapsView({ currentRole }) {
               slot={i}
               selected={person.id === selectedPersonId}
               onSelect={setSelectedPersonId}
+              thermal={personMode === 'lidar'}
             />
           ))}
         </Scene3D>

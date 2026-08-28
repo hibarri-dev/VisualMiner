@@ -6,6 +6,7 @@ import { quarryMarkerPosition, quarrySlope, sampleQuarryHeight } from '../../thr
 import { clearFleetPose, mapTooClose, separateFleet } from '../../three/fleetTraffic'
 import { MACHINE_GLB, MODEL_SIZE } from '../../three/modelCatalog'
 import FittedGltf from './FittedGltf'
+import ThermalGltf from './ThermalGltf'
 import MachineModel from './MachineModel'
 
 const MARGIN = 20
@@ -83,7 +84,7 @@ function pickHome(rng, id) {
   return best
 }
 
-export default function MachineMarker3D({ machine, selected, operator, onSelect }) {
+export default function MachineMarker3D({ machine, selected, operator, onSelect, thermal = false }) {
   const spec = MACHINE_TYPES[machine.type]
   const size = MODEL_SIZE[machine.type] || 0.8
   const radius = Math.max(size * 0.9, 0.55)
@@ -216,7 +217,11 @@ export default function MachineMarker3D({ machine, selected, operator, onSelect 
       onPointerOut={() => setHovered(false)}
     >
       {glb ? (
-        <FittedGltf url={glb} size={size} selected={selected} />
+        thermal ? (
+          <ThermalGltf url={glb} size={size} selected={selected} />
+        ) : (
+          <FittedGltf url={glb} size={size} selected={selected} />
+        )
       ) : (
         <MachineModel type={machine.type} status={shownStatus} payloadPercent={payloadPercent} selected={selected} />
       )}
