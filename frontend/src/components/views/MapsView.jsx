@@ -5,7 +5,8 @@ import StatusBadge from '../dashboard/StatusBadge'
 import Scene3D from '../three/Scene3D'
 import QuarryGltf3D from '../three/QuarryGltf3D'
 import LidarTerrain3D from '../three/LidarTerrain3D'
-import ViewModeToggle from '../three/ViewModeToggle'
+import ViewModeToggle, { LIDAR_CHANNELS } from '../three/ViewModeToggle'
+import LidarLegend from '../three/LidarLegend'
 import MachineMarker3D from '../three/MachineMarker3D'
 import PersonMarker3D from '../three/PersonMarker3D'
 import { preloadGltfs } from '../three/FittedGltf'
@@ -16,6 +17,10 @@ preloadGltfs(GLB_PRELOAD)
 export default function MapsView({ currentRole }) {
   const [machineMode, setMachineMode] = useState('daylight')
   const [personMode, setPersonMode] = useState('daylight')
+  // Shading channel for the LiDAR clouds. Density is the default: a depth-shaded
+  // scan answers "how deep", a density-shaded one answers "where is the ore".
+  const [machineChannel, setMachineChannel] = useState('density')
+  const [personChannel, setPersonChannel] = useState('density')
   const {
     mine,
     selectedMachineId,
@@ -39,8 +44,18 @@ export default function MapsView({ currentRole }) {
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Machine monitoring</span>
           <StatusBadge value={`${mapMachines.length} on pit`} />
         </div>
-        <div className="absolute right-3 top-3 z-10">
+        <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
           <ViewModeToggle mode={machineMode} onChange={setMachineMode} />
+          {machineMode === 'lidar' ? (
+            <>
+              <ViewModeToggle
+                mode={machineChannel}
+                onChange={setMachineChannel}
+                options={LIDAR_CHANNELS}
+              />
+              <LidarLegend channel={machineChannel} />
+            </>
+          ) : null}
         </div>
         <Scene3D
           cameraPosition={[0.2, 3.4, 4.2]}
@@ -53,7 +68,7 @@ export default function MapsView({ currentRole }) {
           variant={machineMode}
           onPointerMissed={() => setSelectedMachineId(null)}
         >
-          {machineMode === 'lidar' ? <LidarTerrain3D /> : <QuarryGltf3D />}
+          {machineMode === 'lidar' ? <LidarTerrain3D channel={machineChannel} /> : <QuarryGltf3D />}
           {mapMachines.map((machine, i) => (
             <MachineMarker3D
               key={machine.id}
@@ -73,8 +88,18 @@ export default function MapsView({ currentRole }) {
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Personnel monitoring</span>
           <StatusBadge value={`${Math.min(mapPeople.length, 14)} tagged`} />
         </div>
-        <div className="absolute right-3 top-3 z-10">
+        <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
           <ViewModeToggle mode={personMode} onChange={setPersonMode} />
+          {personMode === 'lidar' ? (
+            <>
+              <ViewModeToggle
+                mode={personChannel}
+                onChange={setPersonChannel}
+                options={LIDAR_CHANNELS}
+              />
+              <LidarLegend channel={personChannel} />
+            </>
+          ) : null}
         </div>
         <Scene3D
           cameraPosition={[-2.1, 3.1, 4.5]}
@@ -87,7 +112,7 @@ export default function MapsView({ currentRole }) {
           variant={personMode}
           onPointerMissed={() => setSelectedPersonId(null)}
         >
-          {personMode === 'lidar' ? <LidarTerrain3D /> : <QuarryGltf3D />}
+          {personMode === 'lidar' ? <LidarTerrain3D channel={personChannel} /> : <QuarryGltf3D />}
           {mapPeople.slice(0, 14).map((person, i) => (
             <PersonMarker3D
               key={person.id}
