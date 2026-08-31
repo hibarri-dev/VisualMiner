@@ -1,6 +1,7 @@
-import React from 'react'
-import { Anchor, Ship, ArrowUpRight, CheckCircle2, Clock, Layers } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Send } from 'lucide-react'
 import { useVisibleMine, useMineData } from '../../context/useMineData'
+import { ROLE_PERSONAS, inboxRole } from '../../data/managerDesk'
 import ViewFrame from './ViewFrame'
 import DataTable from '../dashboard/DataTable'
 import StatusBadge from '../dashboard/StatusBadge'
@@ -94,9 +95,116 @@ export function ScheduleView({ currentRole }) {
 }
 
 export function MessagesView({ currentRole }) {
-  const { mine } = useVisibleMine(currentRole)
+  const { mine, postNote, readInbox } = useVisibleMine(currentRole)
+  const [body, setBody] = useState('')
+  const [flash, setFlash] = useState(null)
+  const worker = currentRole === 'worker'
+  const peer = inboxRole(currentRole)
+  const counterpart = currentRole === 'mine_manager' ? 'executive' : 'mine_manager'
+  const notes = (mine.notes || []).filter(
+    n => n.fromRole === peer || n.toRole === peer || n.fromRole === counterpart || n.toRole === counterpart
+  )
+  const reports = currentRole === 'mine_manager' ? [] : mine.dailyReports || []
+
+  useEffect(() => {
+    if (!worker) readInbox(currentRole)
+  }, [currentRole, worker, readInbox])
+
+  const handleNote = e => {
+    e.preventDefault()
+    const note = postNote({
+      fromRole: peer,
+      toRole: counterpart,
+      author: ROLE_PERSONAS[peer]?.name,
+      body
+    })
+    if (note) {
+      setBody('')
+      setFlash('Note saved in the dummy store. Switch persona to read it on the other desk.')
+      window.setTimeout(() => setFlash(null), 4000)
+    }
+  }
+
   return (
-    <ViewFrame eyebrow="Radio dispatch" title="Channels & AI safety alerts" description="Dummy dispatch traffic tied to the X17 failure.">
+    <ViewFrame
+      scrollPage
+      eyebrow={worker ? 'Radio dispatch' : 'Inbox'}
+      title={worker ? 'Channels & AI safety alerts' : 'Notes between manager and executives'}
+      description={
+        worker
+          ? 'Dummy dispatch traffic tied to the X17 failure.'
+          : 'Daily production reports notify executives. Notes stay on this shared dummy store — switch the header persona to see the other side.'
+      }
+    >
+      {!worker && flash && (
+        <div className="shrink-0 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs text-emerald-200">
+          {flash}
+        </div>
+      )}
+
+      {!worker && reports.length > 0 && (
+        <div className="rounded-xl border border-[#232634] bg-[#16171d] p-4 space-y-2 shrink-0">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Daily production reports</div>
+          {reports.map(r => (
+            <div key={r.id} className="flex items-start justify-between gap-3 text-xs border-b border-[#232530] pb-2 last:border-0 last:pb-0">
+              <div>
+                <div className="text-slate-200 font-medium">
+                  {r.siteName} · {r.tonnes.toLocaleString()} t · {r.trucks} trucks
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Plant {r.plantStatus.replace('_', ' ')}
+                  {r.notes ? ` · ${r.notes}` : ''}
+                </p>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                {r.submittedDate} {r.submittedAt}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!worker && (
+        <div className="rounded-xl border border-[#232634] bg-[#14151c] p-4 space-y-3 shrink-0">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Leave a note for {counterpart.replace('_', ' ')}
+          </div>
+          <form onSubmit={handleNote} className="space-y-2">
+            <textarea
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#1a1c25] border border-[#262835] text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 min-h-[64px] resize-none"
+              rows={2}
+              required
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              placeholder={`You are ${ROLE_PERSONAS[peer]?.name || peer}…`}
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Send note
+            </button>
+          </form>
+          <div className="space-y-2">
+            {notes.length === 0 && <p className="text-[11px] text-slate-500">No notes yet.</p>}
+            {notes.map(n => (
+              <div key={n.id} className="rounded-xl border border-[#272b3b] bg-[#191b24] px-3 py-2.5 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-slate-200">
+                    {n.author}{' '}
+                    <span className="text-slate-500 font-normal">→ {n.toRole.replace('_', ' ')}</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500">{n.at}</span>
+                </div>
+                <p className="text-[12px] text-slate-300 leading-relaxed">{n.body}</p>
+                {n.unread && n.toRole === peer && <StatusBadge value="unread" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <DataTable
         columns={[
           { key: 'at', label: 'Time' },

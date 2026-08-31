@@ -17,12 +17,12 @@ import {
   createMessages,
   createFeeds
 } from './operations'
+import { createWeighbridge as createGateWeighbridge, tickGate, gateKpis, fraudRowsFromTippers } from './logistics'
 import { createSiteReports } from './siteReports'
 import {
   createOreBodies,
   createShiftHandovers,
   createLabTests,
-  createWeighbridge,
   createCommunities,
   createSurveyTargets,
   buildDailyInsights
@@ -59,6 +59,7 @@ const REPORT_SOURCE = {
 export function createMineState() {
   const machines = createMachines()
   const personnel = createPersonnel(machines)
+  const tippers = createTippers()
   const state = {
     site: SITE,
     sites: SITES_CATALOG.map(s => ({ ...s })),
@@ -67,7 +68,7 @@ export function createMineState() {
     production: createProduction(),
     plants: createPlants(),
     stockpiles: createStockpiles(),
-    tippers: createTippers(),
+    tippers,
     alerts: createAlerts(),
     feeds: createFeeds(),
     reports: createSiteReports(),
@@ -78,7 +79,7 @@ export function createMineState() {
     oreBodies: createOreBodies(),
     handovers: createShiftHandovers(),
     labTests: createLabTests(),
-    weighbridge: createWeighbridge(),
+    weighbridge: createGateWeighbridge(tippers),
     communities: createCommunities(),
     surveyTargets: createSurveyTargets(),
     cycleCapture: createCycleCapture(),
@@ -87,6 +88,15 @@ export function createMineState() {
     notifications: createNotifications(),
     insights: [],
     lastTickAt: Date.now()
+  }
+  if (state.cycleCapture?.production) {
+    state.cycleCapture = {
+      ...state.cycleCapture,
+      production: {
+        ...state.cycleCapture.production,
+        fraud: fraudRowsFromTippers(tippers)
+      }
+    }
   }
   state.insights = buildDailyInsights(state)
   return state
@@ -99,7 +109,8 @@ function pushHistory(series, value, max = 12) {
 function refreshNarrative(mine) {
   const crushed = mine.stockpiles.find(s => s.id === 'sp-crushed')
   const x17 = mine.plants.find(p => p.id === 'X17')
-  const queue = mine.tippers.filter(t => t.status === 'queued').length
+  const gate = gateKpis(mine.tippers)
+  const queue = gate.arrivedEmpty + gate.loading + gate.held
   const failureLine =
     x17?.status === 'mechanical_failure'
       ? 'Mechanical failure plant X17'
@@ -120,7 +131,8 @@ function refreshNarrative(mine) {
         failureLine
       ],
       shipments: [
-        `${queue} Side Tippers in queue`,
+        `${queue} empty / held at gate · ${gate.departedLoaded} departed loaded`,
+        gate.fraudFlags ? `${gate.fraudFlags} weighbridge fraud flag${gate.fraudFlags === 1 ? '' : 's'}` : 'Weighbridge tickets matching declared load',
         x17?.status === 'mechanical_failure' ? 'Processing plant delays' : 'Processing recovering',
         crushed?.tons === 0 ? 'No crushed stockpiles loaded' : `${crushed.tons} t crushed fines on pad`
       ]
@@ -217,7 +229,7 @@ export function tickMine(mine) {
     }
   })
 
-  const next = {
+  let next = {
     ...mine,
     machines,
     personnel,
@@ -225,6 +237,7 @@ export function tickMine(mine) {
     feeds,
     lastTickAt: Date.now()
   }
+  next = tickGate(next)
   next.insights = buildDailyInsights(next)
   return next
 }
@@ -318,7 +331,21 @@ export function ingestSiteReport(mine, submission) {
         s.id === 'sp-crushed' ? { ...s, tons: 180, status: 'ok' } : s
       ),
       tippers: next.tippers.map((t, i) =>
-        i < 5 ? { ...t, status: 'dispatched', waitMin: 0, cargo: 'crushed fines' } : t
+        i < 5 && t.id !== 'ST-04' && t.id !== 'ST-09' && t.id !== 'ST-18'
+          ? {
+              ...t,
+              event: 'depart_loaded',
+              status: 'departed',
+              cargo: 'loaded',
+              declaredTons: t.payloadTons || 34,
+              weighbridgeTons: t.payloadTons || 34,
+              declaredKg: (t.payloadTons || 34) * 1000,
+              actualKg: (t.payloadTons || 34) * 1000,
+              flag: 'cleared',
+              waitMin: 0,
+              pile: t.pile === '—' ? 'Crushed fines' : t.pile
+            }
+          : t
       ),
       alerts: next.alerts.map(a =>
         a.id === 'al-x17'
@@ -347,6 +374,7 @@ export function ingestSiteReport(mine, submission) {
 
   next = {
     ...next,
+    weighbridge: createGateWeighbridge(next.tippers),
     production: refreshNarrative(next)
   }
   next.insights = buildDailyInsights(next)
@@ -558,9 +586,11 @@ export function liveStats(mine) {
   const dozers = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'dozers').length
   const drills = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'drills').length
   const support = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'support').length
-  const queued = mine.tippers.filter(t => t.status === 'queued').length
+  const gate = gateKpis(mine.tippers)
+  const queued = gate.arrivedEmpty + gate.loading + gate.held
   const unread = mine.messages.filter(m => m.unread).length
   const unreadNotes = (mine.notes || []).filter(n => n.unread).length
+  const unreadExecutiveNotes = (mine.notes || []).filter(n => n.toRole === 'executive' && n.unread).length
   const unreadExecutiveNotifications = (mine.notifications || []).filter(
     n => n.forRole === 'executive' && n.unread
   ).length
@@ -581,10 +611,16 @@ export function liveStats(mine) {
     geologists,
     safety,
     queuedTippers: queued,
+    arrivedEmpty: gate.arrivedEmpty,
+    departedLoaded: gate.departedLoaded,
+    gateHeld: gate.held,
+    fraudFlags: gate.fraudFlags,
     unreadMessages: unread,
     unreadNotes,
     unreadManagerInbox: (mine.notes || []).filter(n => n.toRole === 'mine_manager' && n.unread).length,
+    unreadExecutiveNotes,
     unreadExecutiveNotifications,
+    unreadExecutiveInbox: unreadExecutiveNotifications + unreadExecutiveNotes,
     dailyReportsCount: (mine.dailyReports || []).length,
     extractionTph: mine.production.extractionTph,
     crushingTph: mine.production.crushingTph,

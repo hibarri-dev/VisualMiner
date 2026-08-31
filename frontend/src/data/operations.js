@@ -1,4 +1,4 @@
-import { mulberry32, pick, randInt } from './rng'
+import { mulberry32 } from './rng'
 import { FEED_CATALOG, PLANTS, STOCKPILES } from './catalog'
 
 function sparkline(rng, points, center, spread, digits = 0) {
@@ -54,21 +54,7 @@ export function createStockpiles() {
   return STOCKPILES.map(s => ({ ...s }))
 }
 
-export function createTippers() {
-  const rng = mulberry32(334455)
-  const tippers = []
-  for (let i = 1; i <= 17; i += 1) {
-    tippers.push({
-      id: `ST-${String(i).padStart(2, '0')}`,
-      type: 'Side Tipper',
-      status: 'queued',
-      waitMin: randInt(rng, 12, 96),
-      cargo: 'empty',
-      destination: pick(rng, ['Terminal 2', 'Crushed Fines Yard', 'ROM Pad'])
-    })
-  }
-  return tippers
-}
+export { createTippers } from './logistics'
 
 export function createAlerts() {
   return [

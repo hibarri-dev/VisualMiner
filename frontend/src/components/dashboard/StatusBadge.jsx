@@ -42,6 +42,11 @@ const TONES = {
   renewal_in_progress: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
   submitted: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   unread: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+  arrive_empty: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  depart_loaded: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  loading: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  departed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  pending: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
   extracting: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   deferred_low_grade: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
   extracting_sell_raw: 'bg-amber-500/15 text-amber-300 border-amber-500/30'
