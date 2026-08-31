@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { useVisibleMine } from '../../context/useMineData'
 import { personForMachine } from '../../data'
 import StatusBadge from '../dashboard/StatusBadge'
@@ -14,7 +15,7 @@ import { GLB_PRELOAD } from '../../three/modelCatalog'
 
 preloadGltfs(GLB_PRELOAD)
 
-export default function MapsView({ currentRole }) {
+export default function MapsView({ currentRole, focusedAsset, onNavigate }) {
   const [machineMode, setMachineMode] = useState('daylight')
   const [personMode, setPersonMode] = useState('daylight')
   // Shading channel for the LiDAR clouds. Density is the default: a depth-shaded
@@ -39,6 +40,54 @@ export default function MapsView({ currentRole }) {
 
   return (
     <div className="flex-1 flex flex-col gap-3 sm:gap-4 p-3 sm:p-5 overflow-y-auto bg-[#0d0e12]">
+      {focusedAsset ? (
+        <div className="shrink-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-3 py-2.5 rounded-xl bg-[#14151c] border border-[#242836]">
+          <button
+            type="button"
+            onClick={() => onNavigate?.('portfolio')}
+            className="self-start flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#1a1d27] hover:bg-[#222636] text-slate-300 border border-[#2a2e3c] transition cursor-pointer shrink-0"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            Portfolio map
+          </button>
+          <div className="min-w-0 flex-1">
+            <div className="text-[13px] font-semibold text-white leading-tight truncate">
+              {focusedAsset.name}
+            </div>
+            <div className="text-[10px] text-slate-500 truncate">
+              {[focusedAsset.country, focusedAsset.province, focusedAsset.commodity]
+                .filter(Boolean)
+                .join(' · ')}
+            </div>
+          </div>
+          <dl className="flex items-center gap-3 sm:gap-4 shrink-0">
+            {focusedAsset.tpd ? (
+              <div>
+                <dt className="text-[8.5px] font-bold uppercase tracking-[0.14em] text-slate-500">Rate</dt>
+                <dd className="text-[12px] font-semibold text-slate-100 tabular-nums leading-tight">
+                  {focusedAsset.tpd.toLocaleString()} t/d
+                </dd>
+              </div>
+            ) : null}
+            {focusedAsset.trucksWeighedToday ? (
+              <div>
+                <dt className="text-[8.5px] font-bold uppercase tracking-[0.14em] text-slate-500">Weighed</dt>
+                <dd className="text-[12px] font-semibold text-slate-100 tabular-nums leading-tight">
+                  {focusedAsset.trucksWeighedToday}
+                </dd>
+              </div>
+            ) : null}
+            {focusedAsset.manager ? (
+              <div className="hidden sm:block">
+                <dt className="text-[8.5px] font-bold uppercase tracking-[0.14em] text-slate-500">Manager</dt>
+                <dd className="text-[12px] font-semibold text-slate-100 leading-tight">
+                  {focusedAsset.manager}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        </div>
+      ) : null}
       <div className="relative flex-1 min-h-[260px] sm:min-h-[320px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl select-none">
         <div className="absolute left-4 top-3 z-10 flex items-center gap-2 pointer-events-none">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Machine monitoring</span>

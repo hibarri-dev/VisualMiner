@@ -1,49 +1,80 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Globe2, RotateCcw } from 'lucide-react'
-import StatusBadge from '../dashboard/StatusBadge'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  AFRICA_OUTLINE,
-  MADAGASCAR_OUTLINE,
+  AlertTriangle,
+  Anchor,
+  Crosshair,
+  Factory,
+  Globe2,
+  Maximize2,
+  Minus,
+  Mountain,
+  Pickaxe,
+  Plus,
+  RotateCcw,
+  Ship,
+  TrainFront,
+  Truck
+} from 'lucide-react'
+import StatusBadge from '../dashboard/StatusBadge'
+import useZoomPan from '../../hooks/useZoomPan'
+import {
   MAP_SIZE,
+  headingAlong,
   pointAlong,
   project,
   toPath
 } from '../../data/africaGeo'
+import { COUNTRY_SHAPES, GRATICULE, isoForAlpha2 } from '../../data/africaCountries'
 import {
   COUNTRIES,
   MAP_LAYERS,
   ROAD_CORRIDORS,
+  TRUCK_FLEET,
   createPortfolioState,
   formatTons,
   portfolioRollup,
   tickPortfolio
 } from '../../data/portfolio'
 
-const AFRICA_PATH = toPath(AFRICA_OUTLINE)
-const MADAGASCAR_PATH = toPath(MADAGASCAR_OUTLINE)
+// Light land on dark water. Countries holding assets are lifted a shade so the map
+// itself shows where the book is concentrated before you read a single label.
+const LAND = '#b7c0cd'
+const LAND_ACTIVE = '#e4eaf3'
+const LAND_EDGE = '#7d8798'
+const OCEAN_TOP = '#0a1119'
+const OCEAN_BOTTOM = '#070b12'
+const GRATICULE_INK = '#16202e'
 
-const LAND = '#c3c9d4'
-const LAND_EDGE = '#8f97a6'
-
-// Marker glyphs, drawn in viewBox units around a local origin so a marker can be
-// dropped at any projected point with a single translate.
-const GLYPHS = {
-  mine: 'M -7 5 L -1.5 -4 L 2 1 L 4 -2 L 7 5 Z',
-  plant: 'M -6 5 L -6 -1 L -1 -1 L -1 -4 L 6 -4 L 6 5 Z',
-  port: 'M -5 -5 L 5 -5 L 5 1 L 0 5 L -5 1 Z',
-  ship: 'M -8 1 L 8 1 L 5.5 5 L -5.5 5 Z M -0.6 1 L -0.6 -5 L 0.6 -5 L 0.6 1 Z',
-  truck: 'M -7 -2 L 0 -2 L 0 -4.5 L 3.5 -4.5 L 6.5 -1 L 6.5 2.5 L -7 2.5 Z',
-  siding: 'M 0 -4 L 4 0 L 0 4 L -4 0 Z'
+/**
+ * Real icons on coloured map-pin badges rather than hand-drawn polygons.
+ *
+ * Each entry pairs a lucide glyph with the fill it sits on and the ink it is drawn in.
+ * The ink is picked per fill rather than being a single white: an anchor drawn white on
+ * the mint port badge, or a ship drawn white on the near-white vessel badge, disappears.
+ */
+const MARKER_SPEC = {
+  mine: { Icon: Pickaxe, fill: '#c026d3', ink: '#ffffff' },
+  plant: { Icon: Factory, fill: '#fb923c', ink: '#231204' },
+  port: { Icon: Anchor, fill: '#34d399', ink: '#04291d' },
+  ship: { Icon: Ship, fill: '#f1f5f9', ink: '#0b1220' },
+  shipRisk: { Icon: Ship, fill: '#fda4af', ink: '#450a18' },
+  truck: { Icon: Truck, fill: '#38bdf8', ink: '#052a3d' },
+  truckEmpty: { Icon: Truck, fill: '#7f93aa', ink: '#0c1620' },
+  siding: { Icon: TrainFront, fill: '#a78bfa', ink: '#1e1145' }
 }
 
+// Line work only — marker fills now live in MARKER_SPEC.
 const COLORS = {
-  mine: '#c026d3',
-  plant: '#fb923c',
-  port: '#34d399',
-  ship: '#f8fafc',
   truck: '#38bdf8',
   rail: '#a78bfa'
 }
+
+// Glyphs are authored around a ~14 unit box. Markers counter-scale by 1/k to hold a
+// constant screen size, so this multiplier is the one place that sets how big they read.
+const MARKER_SCALE = 1.55
+// Trucks are the most numerous thing on the map, so they sit a little under the assets
+// to stop the corridors reading as a wall of icons.
+const TRUCK_SCALE = 1.2
 
 const STATUS_TONE = {
   producing: 'text-emerald-300',
@@ -57,6 +88,10 @@ const STATUS_TONE = {
   exploration: 'text-indigo-300'
 }
 
+// One viewBox unit is 0.1 degrees, and a degree of latitude is ~111 km.
+const KM_PER_UNIT = 11.1
+const SCALE_STEPS = [50, 100, 200, 250, 500, 1000, 2000]
+
 function Kpi({ label, value, sub, tone = 'text-white' }) {
   return (
     <div className="px-3 py-2 rounded-xl bg-[#14151c] border border-[#242836] min-w-0">
@@ -67,14 +102,78 @@ function Kpi({ label, value, sub, tone = 'text-white' }) {
   )
 }
 
-/** Name + one number, rendered in SVG so it scales with the map rather than the page. */
-function MapLabel({ x, y, title, detail }) {
+/**
+ * A map pin. Lives inside the zoomed group so it tracks its geography, but
+ * counter-scales by 1/k so it stays the same size on screen at every zoom level.
+ */
+function Marker({
+  x,
+  y,
+  k,
+  spec,
+  active,
+  hovered,
+  risk,
+  onSelect,
+  onFocus,
+  title,
+  scale = MARKER_SCALE,
+  radius = 11,
+  heading = null
+}) {
+  const { Icon, fill, ink } = spec
+  const size = radius * 1.45
+  return (
+    <g
+      transform={`translate(${x} ${y}) scale(${scale / k})`}
+      className="cursor-pointer"
+      role="button"
+      aria-label={title}
+      onClick={onSelect}
+      onDoubleClick={onFocus}
+      onPointerEnter={hovered.enter}
+      onPointerLeave={hovered.leave}
+    >
+      {risk ? <circle r={radius + 5} fill="#f43f5e" opacity="0.22" /> : null}
+      {active ? (
+        <circle r={radius + 4} fill="none" stroke="#f8fafc" strokeWidth="1.6" opacity="0.95" />
+      ) : hovered.on ? (
+        <circle r={radius + 3} fill="none" stroke="#f8fafc" strokeWidth="1.2" opacity="0.5" />
+      ) : null}
+      {/* Offset disc instead of an SVG drop-shadow filter: ~70 of these repaint at 30fps
+          while the trucks roll, and filters are the one thing that makes that expensive. */}
+      <circle cy="1.3" r={radius} fill="#000" opacity="0.38" />
+      <circle r={radius} fill={fill} stroke="#0b0d13" strokeWidth="1.2" />
+      {/* Direction pip for vehicles. The badge and its icon stay upright — rotating the
+          badge itself would just hang the truck upside down on southbound legs. */}
+      {heading !== null ? (
+        <path
+          d={`M ${radius + 4} 0 L ${radius - 1.5} -3.2 L ${radius - 1.5} 3.2 Z`}
+          fill={fill}
+          stroke="#0b0d13"
+          strokeWidth="0.8"
+          strokeLinejoin="round"
+          transform={`rotate(${heading})`}
+        />
+      ) : null}
+      <Icon x={-size / 2} y={-size / 2} size={size} color={ink} strokeWidth={2.9} />
+      <circle r={radius + 4} fill="transparent" />
+    </g>
+  )
+}
+
+/**
+ * Name + one number. Rendered in the overlay layer (screen space, outside the zoom
+ * group) so it is always legible and its edge-flip test can use the real frame width.
+ */
+function MapLabel({ x, y, title, detail, dim }) {
+  if (x < -40 || y < -40 || x > MAP_SIZE.width + 40 || y > MAP_SIZE.height + 40) return null
   const width = Math.max(title.length, detail.length) * 5.6 + 16
   const flipX = x + width + 14 > MAP_SIZE.width
   const left = flipX ? x - width - 12 : x + 12
   const top = y - 26
   return (
-    <g pointerEvents="none">
+    <g pointerEvents="none" opacity={dim ? 0.85 : 1}>
       <line x1={x} y1={y} x2={flipX ? left + width : left} y2={top + 20} stroke="#f8fafc" strokeWidth="1" opacity="0.5" />
       <rect x={left} y={top} width={width} height={30} rx="5" fill="#0b0d13" stroke="#3f4657" opacity="0.96" />
       <text x={left + 8} y={top + 12.5} fill="#f1f5f9" fontSize="10.5" fontWeight="600">{title}</text>
@@ -83,10 +182,41 @@ function MapLabel({ x, y, title, detail }) {
   )
 }
 
-export default function PortfolioMapView() {
+function ZoomButton({ label, onClick, disabled, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+      className="w-7 h-7 flex items-center justify-center rounded-md bg-black/60 border border-white/15 text-slate-200 backdrop-blur-sm transition-colors hover:bg-black/80 hover:text-white disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+    >
+      {children}
+    </button>
+  )
+}
+
+export default function PortfolioMapView({ onNavigate }) {
   const [state, setState] = useState(() => createPortfolioState())
   const [layers, setLayers] = useState(() => new Set(MAP_LAYERS.map(l => l.id)))
   const [selectedId, setSelectedId] = useState('port-beira')
+  const [hoverId, setHoverId] = useState(null)
+
+  const {
+    svgRef,
+    view,
+    panning,
+    transform,
+    handlers,
+    zoomBy,
+    focusOn,
+    reset,
+    panBy,
+    wasDragged,
+    minScale,
+    maxScale
+  } = useZoomPan({ width: MAP_SIZE.width, height: MAP_SIZE.height, minScale: 1, maxScale: 16 })
 
   useEffect(() => {
     const id = setInterval(() => setState(prev => tickPortfolio(prev)), 2500)
@@ -95,14 +225,72 @@ export default function PortfolioMapView() {
 
   const rollup = useMemo(() => portfolioRollup(state), [state])
   const mapped = useMemo(() => state.assets.filter(a => a.region === 'africa'), [state.assets])
+
+  // The 2.5s data heartbeat is the wrong clock for vehicles — it makes trucks teleport
+  // in visible hops. Positions run off their own rAF clock instead, so the icons roll
+  // smoothly while tonnages and weighbridge counts keep stepping on the slow tick.
+  const [clock, setClock] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const t0 = performance.now()
+    let last = 0
+    const step = now => {
+      // ~30fps. A truck takes over a minute to cross its corridor, so the extra frames
+      // are invisible, and capping halves the cost of re-rendering the map each tick.
+      if (now - last >= 33) {
+        last = now
+        setClock((now - t0) / 1000)
+      }
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  const trucks = useMemo(
+    () =>
+      TRUCK_FLEET.map(tr => {
+        const corridor = ROAD_CORRIDORS.find(r => r.id === tr.corridorId)
+        if (!corridor) return { ...tr, lon: 0, lat: 0, heading: 0 }
+        const p = (tr.phase + clock * tr.speed) % 1
+        // Laden trucks run pit -> port; empties run the same road backwards.
+        const t = tr.laden ? p : 1 - p
+        const [lon, lat] = pointAlong(corridor.path, t)
+        const heading = headingAlong(corridor.path, t)
+        return {
+          ...tr,
+          lon,
+          lat,
+          // The glyph is drawn nose-right, so the tangent is the rotation; empties are
+          // travelling against it and get flipped.
+          heading: (heading * 180) / Math.PI + (tr.laden ? 0 : 180)
+        }
+      }),
+    [clock]
+  )
+
   // Assets, vessels, convoys and sidings are different shapes but the detail card
-  // only ever reads a common subset — normalise the two odd ones on the way in.
+  // only ever reads a common subset — normalise the odd ones on the way in.
   const selected = useMemo(() => {
     if (!selectedId) return null
     const asset = state.assets.find(a => a.id === selectedId)
     if (asset) return asset
     const vessel = state.vessels.find(v => v.id === selectedId)
     if (vessel) return vessel
+    const tr = TRUCK_FLEET.find(t => t.id === selectedId)
+    if (tr) {
+      const convoy = state.convoys.find(c => c.id === tr.convoyId)
+      return {
+        name: `${tr.laden ? 'Laden' : 'Empty'} tipper — ${tr.label}`,
+        status: tr.laden ? 'hauling' : 'returning',
+        commodity: `${tr.tonsPerTruck} t side tipper`,
+        payloadLabel: tr.laden
+          ? `${tr.tonsPerTruck} t — weighed out at the pit gate`
+          : 'Empty — inbound for loading',
+        gradeLabel: convoy ? `Convoy ETA ${Math.round(convoy.etaHours)} h` : null,
+        note: convoy ? convoy.note : null
+      }
+    }
     const convoy = state.convoys.find(c => c.id === selectedId)
     if (convoy) {
       return {
@@ -131,21 +319,79 @@ export default function PortfolioMapView() {
     return null
   }, [state, selectedId])
 
+  /** Geographic position of anything selectable, so the map can fly to it. */
+  const locate = useCallback(
+    id => {
+      const asset = state.assets.find(a => a.id === id)
+      if (asset) return [asset.lon, asset.lat]
+      const vessel = state.vessels.find(v => v.id === id)
+      if (vessel) return [vessel.lon, vessel.lat]
+      const truck = trucks.find(t => t.id === id)
+      if (truck) return [truck.lon, truck.lat]
+      const siding = state.rail.flatMap(l => l.sidings).find(s => s.id === id)
+      if (siding) return [siding.lon, siding.lat]
+      return null
+    },
+    [state, trucks]
+  )
+
+  const focusId = useCallback(
+    (id, k = 5.5) => {
+      const at = locate(id)
+      if (!at) return
+      const [wx, wy] = project(at[0], at[1])
+      focusOn(wx, wy, Math.max(view.k, k))
+    },
+    [locate, focusOn, view.k]
+  )
+
+  /** Select from a side panel: highlight it and bring it into frame. */
+  const pickAndFocus = useCallback(
+    id => {
+      setSelectedId(id)
+      focusId(id)
+    },
+    [focusId]
+  )
+
+  /**
+   * Drop from the continent straight into a pit. Mines carry their own identity into
+   * the 3D view; the terrain mesh itself is the shared reference twin, so the view
+   * labels which asset it is standing in for.
+   */
+  const openPit = useCallback(
+    asset => {
+      setSelectedId(asset.id)
+      onNavigate?.('maps', { asset })
+    },
+    [onNavigate]
+  )
+
+  // Clicks arriving after a drag are the tail of a pan gesture, not a selection.
+  const guarded = useCallback(
+    fn => e => {
+      e.stopPropagation()
+      if (wasDragged()) return
+      fn()
+    },
+    [wasDragged]
+  )
+
   const countryCounts = useMemo(() => {
     const counts = new Map()
     mapped.forEach(a => counts.set(a.countryCode, (counts.get(a.countryCode) || 0) + 1))
     return counts
   }, [mapped])
 
-  const convoyPoints = useMemo(
-    () =>
-      state.convoys.map(c => {
-        const corridor = ROAD_CORRIDORS.find(r => r.id === c.corridorId)
-        const [lon, lat] = corridor ? pointAlong(corridor.path, c.t) : [0, 0]
-        return { ...c, corridor, lon, lat }
-      }),
-    [state.convoys]
-  )
+  // ISO numerics of the countries we actually operate in, for the land highlight.
+  const activeIso = useMemo(() => {
+    const set = new Set()
+    mapped.forEach(a => {
+      const iso = isoForAlpha2(a.countryCode)
+      if (iso) set.add(iso)
+    })
+    return set
+  }, [mapped])
 
   const toggleLayer = id =>
     setLayers(prev => {
@@ -158,8 +404,90 @@ export default function PortfolioMapView() {
   const on = id => layers.has(id)
   const riskVessels = state.vessels.filter(v => v.status === 'demurrage' || v.status === 'waiting_cargo')
 
+  /** World (lon/lat) -> overlay coordinates, i.e. after pan and zoom. */
+  const toScreen = useCallback(
+    (lon, lat) => {
+      const [wx, wy] = project(lon, lat)
+      return [wx * view.k + view.x, wy * view.k + view.y]
+    },
+    [view]
+  )
+
+  const hoverFor = id => ({
+    on: hoverId === id,
+    enter: () => setHoverId(id),
+    leave: () => setHoverId(current => (current === id ? null : current))
+  })
+
+  const onKeyDown = e => {
+    const step = 60 / view.k
+    if (e.key === 'ArrowLeft') panBy(step, 0)
+    else if (e.key === 'ArrowRight') panBy(-step, 0)
+    else if (e.key === 'ArrowUp') panBy(0, step)
+    else if (e.key === 'ArrowDown') panBy(0, -step)
+    else if (e.key === '+' || e.key === '=') zoomBy(1.5)
+    else if (e.key === '-' || e.key === '_') zoomBy(1 / 1.5)
+    else if (e.key === '0') reset()
+    else if (e.key === 'Escape') setSelectedId(null)
+    else return
+    e.preventDefault()
+  }
+
+  // Scale bar: pick the round distance that renders closest to ~90 units wide.
+  const scaleKm = SCALE_STEPS.reduce((best, km) => {
+    const target = (90 * KM_PER_UNIT) / view.k
+    return Math.abs(km - target) < Math.abs(best - target) ? km : best
+  }, SCALE_STEPS[0])
+  const scaleUnits = (scaleKm * view.k) / KM_PER_UNIT
+
+  // Country names are geography, not data — hold them at a constant screen size and
+  // fade them back once the zoom is deep enough that the assets are the subject.
+  const labelScale = 1 / view.k
+  const countryOpacity = view.k > 6 ? 0.35 : 1
+
+  const labelFor = id => {
+    const asset = state.assets.find(a => a.id === id)
+    if (asset) {
+      const [x, y] = toScreen(asset.lon, asset.lat)
+      const detail =
+        asset.type === 'port'
+          ? `${formatTons(asset.stockpileTons)} · ${asset.loadRateTph} t/h`
+          : `${asset.tpd.toLocaleString()} t/d · ${asset.trucksWeighedToday} trucks`
+      return { x, y, title: asset.name, detail }
+    }
+    const vessel = state.vessels.find(v => v.id === id)
+    if (vessel) {
+      const [x, y] = toScreen(vessel.lon, vessel.lat)
+      return {
+        x,
+        y,
+        title: `${vessel.name} (${vessel.flag})`,
+        detail: `${formatTons(vessel.loadedTons)} / ${formatTons(vessel.capacityTons)}`
+      }
+    }
+    const truck = trucks.find(t => t.id === id)
+    if (truck) {
+      const [x, y] = toScreen(truck.lon, truck.lat)
+      return {
+        x,
+        y,
+        title: truck.label,
+        detail: truck.laden ? `Laden · ${truck.tonsPerTruck} t` : 'Empty · returning to pit'
+      }
+    }
+    const siding = state.rail.flatMap(l => l.sidings).find(s => s.id === id)
+    if (siding) {
+      const [x, y] = toScreen(siding.lon, siding.lat)
+      return { x, y, title: siding.name, detail: `${formatTons(siding.tons)} · ${siding.wagons} wagons` }
+    }
+    return null
+  }
+
+  const selectedLabel = selectedId ? labelFor(selectedId) : null
+  const hoverLabel = hoverId && hoverId !== selectedId ? labelFor(hoverId) : null
+
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#0d0e12] overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#0d0e12] overflow-y-auto xl:overflow-hidden">
       <div className="shrink-0 px-3 sm:px-5 pt-3 sm:pt-4 pb-2 flex flex-col lg:flex-row lg:items-end justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-0.5 flex items-center gap-1.5">
@@ -199,13 +527,15 @@ export default function PortfolioMapView() {
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[1fr_20rem] gap-3 p-3 sm:p-5 pt-1">
-        <div className="relative min-h-[340px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl">
+        <div
+          className="relative min-h-[58vh] sm:min-h-[62vh] xl:min-h-[340px] rounded-2xl overflow-hidden bg-[#07090f] border border-[#232634] shadow-xl"
+        >
           <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-1.5 pointer-events-none">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Africa operations</span>
             <StatusBadge value="live" />
           </div>
 
-          <div className="absolute right-3 top-3 z-20 flex flex-wrap justify-end gap-1">
+          <div className="absolute right-3 top-3 z-20 flex flex-wrap justify-end gap-1 max-w-[70%]">
             {MAP_LAYERS.map(l => (
               <button
                 key={l.id}
@@ -227,245 +557,278 @@ export default function PortfolioMapView() {
             ))}
           </div>
 
+          {/* Zoom controls */}
+          <div className="absolute right-3 bottom-3 z-20 flex flex-col items-end gap-1">
+            <div className="px-1.5 py-0.5 rounded-md bg-black/60 border border-white/15 backdrop-blur-sm text-[9px] font-mono text-slate-300 tabular-nums">
+              {view.k.toFixed(1)}×
+            </div>
+            <ZoomButton label="Zoom in" onClick={() => zoomBy(1.6)} disabled={view.k >= maxScale - 0.01}>
+              <Plus className="w-3.5 h-3.5" />
+            </ZoomButton>
+            <ZoomButton label="Zoom out" onClick={() => zoomBy(1 / 1.6)} disabled={view.k <= minScale + 0.01}>
+              <Minus className="w-3.5 h-3.5" />
+            </ZoomButton>
+            <ZoomButton label="Zoom to selection" onClick={() => selectedId && focusId(selectedId, 6)} disabled={!selectedId}>
+              <Crosshair className="w-3.5 h-3.5" />
+            </ZoomButton>
+            <ZoomButton label="Fit continent" onClick={reset} disabled={view.k <= minScale + 0.01}>
+              <Maximize2 className="w-3.5 h-3.5" />
+            </ZoomButton>
+          </div>
+
+          <div className="absolute left-3 bottom-3 z-20 pointer-events-none text-[9px] text-slate-500 leading-tight">
+            Scroll to zoom · drag to pan · double-click a mine for its 3D pit
+          </div>
+
           <svg
+            ref={svgRef}
             viewBox={`0 0 ${MAP_SIZE.width} ${MAP_SIZE.height}`}
-            className="absolute inset-0 w-full h-full"
+            className={`absolute inset-0 w-full h-full outline-none ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
             preserveAspectRatio="xMidYMid meet"
-            onClick={() => setSelectedId(null)}
+            style={{ touchAction: 'none' }}
+            tabIndex={0}
+            role="application"
+            aria-label="Africa operations map. Arrow keys pan, plus and minus zoom, 0 resets."
+            onKeyDown={onKeyDown}
+            onClick={() => {
+              if (!wasDragged()) setSelectedId(null)
+            }}
+            {...handlers}
           >
-            <path d={AFRICA_PATH} fill={LAND} stroke={LAND_EDGE} strokeWidth="1.2" strokeLinejoin="round" />
-            <path d={MADAGASCAR_PATH} fill={LAND} stroke={LAND_EDGE} strokeWidth="1.2" strokeLinejoin="round" />
+            <defs>
+              <linearGradient id="pm-ocean" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={OCEAN_TOP} />
+                <stop offset="100%" stopColor={OCEAN_BOTTOM} />
+              </linearGradient>
+            </defs>
 
-            {/* Country labels. No internal borders in the outline, so the asset count
-                next to the name is what tells an executive where the book is concentrated. */}
-            {COUNTRIES.map(c => {
-              const [x, y] = project(c.lon, c.lat)
-              const count = countryCounts.get(c.code) || 0
-              return (
-                <g key={c.code} pointerEvents="none">
-                  <text
-                    x={x}
-                    y={y}
-                    textAnchor="middle"
-                    fill="#3f4757"
-                    fontSize="10"
-                    fontWeight="700"
-                    letterSpacing="0.4"
-                  >
-                    {c.name.toUpperCase()}
-                  </text>
-                  {count ? (
-                    <text x={x} y={y + 11} textAnchor="middle" fill="#5b6478" fontSize="9" fontFamily="ui-monospace, monospace">
-                      {count} assets
-                    </text>
-                  ) : null}
-                </g>
-              )
-            })}
+            <rect width={MAP_SIZE.width} height={MAP_SIZE.height} fill="url(#pm-ocean)" />
 
-            {/* Rail corridors + sidings */}
-            {on('rail')
-              ? state.rail.map(line => (
-                  <g key={line.id}>
-                    <path
-                      d={toPath(line.path, false)}
-                      fill="none"
-                      stroke={COLORS.rail}
-                      strokeWidth="2"
-                      strokeDasharray="7 4"
-                      opacity="0.85"
-                    />
-                    {line.sidings.map(s => {
-                      const [x, y] = project(s.lon, s.lat)
-                      return (
-                        <g
-                          key={s.id}
-                          transform={`translate(${x} ${y})`}
-                          className="cursor-pointer"
-                          onClick={e => {
-                            e.stopPropagation()
-                            setSelectedId(s.id)
-                          }}
-                        >
-                          {selectedId === s.id ? (
-                            <circle r="10" fill="none" stroke="#f8fafc" strokeWidth="1.4" opacity="0.9" />
-                          ) : null}
-                          <path d={GLYPHS.siding} fill={COLORS.rail} stroke="#0b0d13" strokeWidth="1" />
-                          <circle r="12" fill="transparent" />
-                        </g>
-                      )
-                    })}
-                  </g>
-                ))
-              : null}
+            <g transform={transform}>
+              {/* Graticule first: gives the water some depth without competing with the land. */}
+              <path
+                d={GRATICULE}
+                fill="none"
+                stroke={GRATICULE_INK}
+                strokeWidth="1"
+                vectorEffect="non-scaling-stroke"
+              />
 
-            {/* Road corridors under the truck layer */}
-            {on('trucks')
-              ? ROAD_CORRIDORS.map(r => (
-                  <path
-                    key={r.id}
-                    d={toPath(r.path, false)}
-                    fill="none"
-                    stroke={COLORS.truck}
-                    strokeWidth="1.4"
-                    strokeDasharray="2 5"
-                    opacity="0.5"
-                  />
-                ))
-              : null}
+              {/* Real borders, one path per country. */}
+              {COUNTRY_SHAPES.map(c => (
+                <path
+                  key={c.id}
+                  d={c.d}
+                  fill={activeIso.has(c.id) ? LAND_ACTIVE : LAND}
+                  stroke={LAND_EDGE}
+                  strokeWidth="0.6"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
 
-            {/* Mines and plants */}
-            {mapped
-              .filter(a => (a.type === 'mine' && on('mines')) || (a.type === 'plant' && on('plants')))
-              .map(a => {
-                const [x, y] = project(a.lon, a.lat)
-                const active = selectedId === a.id
+              {/* Country labels. No internal borders in the outline, so the asset count
+                  next to the name is what tells an executive where the book is concentrated. */}
+              {COUNTRIES.map(c => {
+                const [x, y] = project(c.lon, c.lat)
+                const count = countryCounts.get(c.code) || 0
                 return (
                   <g
-                    key={a.id}
-                    transform={`translate(${x} ${y})`}
-                    className="cursor-pointer"
-                    onClick={e => {
-                      e.stopPropagation()
-                      setSelectedId(a.id)
-                    }}
+                    key={c.code}
+                    pointerEvents="none"
+                    opacity={countryOpacity}
+                    transform={`translate(${x} ${y}) scale(${labelScale})`}
                   >
-                    {active ? <circle r="13" fill="none" stroke="#f8fafc" strokeWidth="1.4" opacity="0.9" /> : null}
-                    <path
-                      d={a.type === 'mine' ? GLYPHS.mine : GLYPHS.plant}
-                      fill={a.type === 'mine' ? COLORS.mine : COLORS.plant}
-                      stroke="#0b0d13"
-                      strokeWidth="1"
-                    />
-                    <circle r="14" fill="transparent" />
+                    <text textAnchor="middle" fill="#3f4757" fontSize="10" fontWeight="700" letterSpacing="0.4">
+                      {c.name.toUpperCase()}
+                    </text>
+                    {count ? (
+                      <text y="11" textAnchor="middle" fill="#5b6478" fontSize="9" fontFamily="ui-monospace, monospace">
+                        {count} assets
+                      </text>
+                    ) : null}
                   </g>
                 )
               })}
 
-            {/* Ports */}
-            {on('ports')
-              ? mapped
-                  .filter(a => a.type === 'port')
-                  .map(a => {
-                    const [x, y] = project(a.lon, a.lat)
-                    const active = selectedId === a.id
+              {/* Rail corridors + sidings */}
+              {on('rail')
+                ? /* Corridor paths run pit -> port, so a negative dash offset makes the
+                   dashes crawl the way the coal actually travels. */
+                state.rail.map(line => (
+                    <g key={line.id}>
+                      <path
+                        d={toPath(line.path, false)}
+                        fill="none"
+                        stroke={COLORS.rail}
+                        strokeWidth="2"
+                        strokeDasharray="7 4"
+                        strokeDashoffset={-clock * 9}
+                        opacity="0.85"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                      {line.sidings.map(s => {
+                        const [x, y] = project(s.lon, s.lat)
+                        return (
+                          <Marker
+                            key={s.id}
+                            x={x}
+                            y={y}
+                            k={view.k}
+                            spec={MARKER_SPEC.siding}
+                            radius={9}
+                            title={s.name}
+                            active={selectedId === s.id}
+                            hovered={hoverFor(s.id)}
+                            onSelect={guarded(() => setSelectedId(s.id))}
+                            onFocus={guarded(() => pickAndFocus(s.id))}
+                          />
+                        )
+                      })}
+                    </g>
+                  ))
+                : null}
+
+              {/* Road corridors under the truck layer */}
+              {on('trucks')
+                ? ROAD_CORRIDORS.map(r => (
+                    <path
+                      key={r.id}
+                      d={toPath(r.path, false)}
+                      fill="none"
+                      stroke={COLORS.truck}
+                      strokeWidth="1.4"
+                      strokeDasharray="2 5"
+                      strokeDashoffset={-clock * 6}
+                      opacity="0.5"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))
+                : null}
+
+              {/* Mines and plants */}
+              {mapped
+                .filter(a => (a.type === 'mine' && on('mines')) || (a.type === 'plant' && on('plants')))
+                .map(a => {
+                  const [x, y] = project(a.lon, a.lat)
+                  return (
+                    <Marker
+                      key={a.id}
+                      x={x}
+                      y={y}
+                      k={view.k}
+                      spec={a.type === 'mine' ? MARKER_SPEC.mine : MARKER_SPEC.plant}
+                      title={a.name}
+                      active={selectedId === a.id}
+                      hovered={hoverFor(a.id)}
+                      onSelect={guarded(() => setSelectedId(a.id))}
+                      onFocus={guarded(() => (a.type === 'mine' ? openPit(a) : pickAndFocus(a.id)))}
+                    />
+                  )
+                })}
+
+              {/* Ports */}
+              {on('ports')
+                ? mapped
+                    .filter(a => a.type === 'port')
+                    .map(a => {
+                      const [x, y] = project(a.lon, a.lat)
+                      return (
+                        <Marker
+                          key={a.id}
+                          x={x}
+                          y={y}
+                          k={view.k}
+                          spec={MARKER_SPEC.port}
+                          title={a.name}
+                          active={selectedId === a.id}
+                          hovered={hoverFor(a.id)}
+                          onSelect={guarded(() => setSelectedId(a.id))}
+                          onFocus={guarded(() => pickAndFocus(a.id))}
+                        />
+                      )
+                    })
+                : null}
+
+              {/* Vessels offshore */}
+              {on('ports')
+                ? state.vessels.map(v => {
+                    const [x, y] = project(v.lon, v.lat)
+                    const risk = v.status === 'demurrage' || v.status === 'waiting_cargo'
                     return (
-                      <g
-                        key={a.id}
-                        transform={`translate(${x} ${y})`}
-                        className="cursor-pointer"
-                        onClick={e => {
-                          e.stopPropagation()
-                          setSelectedId(a.id)
-                        }}
-                      >
-                        {active ? <circle r="13" fill="none" stroke="#f8fafc" strokeWidth="1.4" opacity="0.9" /> : null}
-                        <path d={GLYPHS.port} fill={COLORS.port} stroke="#0b0d13" strokeWidth="1" />
-                        <circle r="14" fill="transparent" />
-                      </g>
+                      <Marker
+                        key={v.id}
+                        x={x}
+                        y={y}
+                        k={view.k}
+                        spec={risk ? MARKER_SPEC.shipRisk : MARKER_SPEC.ship}
+                        title={v.name}
+                        risk={risk}
+                        active={selectedId === v.id}
+                        hovered={hoverFor(v.id)}
+                        onSelect={guarded(() => setSelectedId(v.id))}
+                        onFocus={guarded(() => pickAndFocus(v.id))}
+                      />
                     )
                   })
-              : null}
+                : null}
 
-            {/* Vessels offshore */}
-            {on('ports')
-              ? state.vessels.map(v => {
-                  const [x, y] = project(v.lon, v.lat)
-                  const risk = v.status === 'demurrage' || v.status === 'waiting_cargo'
-                  const active = selectedId === v.id
-                  return (
-                    <g
-                      key={v.id}
-                      transform={`translate(${x} ${y})`}
-                      className="cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation()
-                        setSelectedId(v.id)
-                      }}
-                    >
-                      {active ? <circle r="13" fill="none" stroke="#f8fafc" strokeWidth="1.4" opacity="0.9" /> : null}
-                      {risk ? <circle r="10" fill="#f43f5e" opacity="0.22" /> : null}
-                      <path d={GLYPHS.ship} fill={risk ? '#fda4af' : COLORS.ship} stroke="#0b0d13" strokeWidth="0.8" />
-                      <circle r="13" fill="transparent" />
-                    </g>
-                  )
-                })
-              : null}
+              {/* Trucks rolling the corridors, laden out and empty back */}
+              {on('trucks')
+                ? trucks.map(tr => {
+                    const [x, y] = project(tr.lon, tr.lat)
+                    return (
+                      <Marker
+                        key={tr.id}
+                        x={x}
+                        y={y}
+                        k={view.k}
+                        scale={TRUCK_SCALE}
+                        radius={8.5}
+                        heading={tr.heading}
+                        spec={tr.laden ? MARKER_SPEC.truck : MARKER_SPEC.truckEmpty}
+                        title={`${tr.laden ? 'Laden' : 'Empty'} tipper — ${tr.label}`}
+                        active={selectedId === tr.id}
+                        hovered={hoverFor(tr.id)}
+                        onSelect={guarded(() => setSelectedId(tr.id))}
+                        onFocus={guarded(() => pickAndFocus(tr.id))}
+                      />
+                    )
+                  })
+                : null}
+            </g>
 
-            {/* Truck convoys, position advanced each tick */}
-            {on('trucks')
-              ? convoyPoints.map(c => {
-                  const [x, y] = project(c.lon, c.lat)
-                  const active = selectedId === c.id
-                  return (
-                    <g
-                      key={c.id}
-                      transform={`translate(${x} ${y})`}
-                      className="cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation()
-                        setSelectedId(c.id)
-                      }}
-                    >
-                      {active ? <circle r="13" fill="none" stroke="#f8fafc" strokeWidth="1.4" opacity="0.9" /> : null}
-                      <path d={GLYPHS.truck} fill={COLORS.truck} stroke="#0b0d13" strokeWidth="1" />
-                      <circle r="13" fill="transparent" />
-                    </g>
-                  )
-                })
-              : null}
+            {/* Overlay layer: screen space, so callouts stay legible at any zoom. */}
+            {hoverLabel ? <MapLabel {...hoverLabel} dim /> : null}
+            {selectedLabel ? <MapLabel {...selectedLabel} /> : null}
 
-            {/* Callout for whatever is selected, drawn last so it sits above every marker */}
-            {(() => {
-              if (!selectedId) return null
-              const asset = state.assets.find(a => a.id === selectedId)
-              if (asset) {
-                const [x, y] = project(asset.lon, asset.lat)
-                const detail =
-                  asset.type === 'port'
-                    ? `${formatTons(asset.stockpileTons)} · ${asset.loadRateTph} t/h`
-                    : `${asset.tpd.toLocaleString()} t/d · ${asset.trucksWeighedToday} trucks`
-                return <MapLabel x={x} y={y} title={asset.name} detail={detail} />
-              }
-              const vessel = state.vessels.find(v => v.id === selectedId)
-              if (vessel) {
-                const [x, y] = project(vessel.lon, vessel.lat)
-                return (
-                  <MapLabel
-                    x={x}
-                    y={y}
-                    title={`${vessel.name} (${vessel.flag})`}
-                    detail={`${formatTons(vessel.loadedTons)} / ${formatTons(vessel.capacityTons)}`}
-                  />
-                )
-              }
-              const convoy = convoyPoints.find(c => c.id === selectedId)
-              if (convoy) {
-                const [x, y] = project(convoy.lon, convoy.lat)
-                return (
-                  <MapLabel
-                    x={x}
-                    y={y}
-                    title={convoy.label}
-                    detail={`${convoy.trucks} × ${convoy.tonsPerTruck} t · ETA ${Math.round(convoy.etaHours)} h`}
-                  />
-                )
-              }
-              const siding = state.rail.flatMap(l => l.sidings).find(s => s.id === selectedId)
-              if (siding) {
-                const [x, y] = project(siding.lon, siding.lat)
-                return (
-                  <MapLabel x={x} y={y} title={siding.name} detail={`${formatTons(siding.tons)} · ${siding.wagons} wagons`} />
-                )
-              }
-              return null
-            })()}
+            {/* Scale bar, also outside the zoom group so it can restate itself in km. */}
+            <g transform={`translate(14 ${MAP_SIZE.height - 34})`} pointerEvents="none">
+              <line x1="0" y1="0" x2={scaleUnits} y2="0" stroke="#94a3b8" strokeWidth="1.5" />
+              <line x1="0" y1="-4" x2="0" y2="4" stroke="#94a3b8" strokeWidth="1.5" />
+              <line x1={scaleUnits} y1="-4" x2={scaleUnits} y2="4" stroke="#94a3b8" strokeWidth="1.5" />
+              <text x={scaleUnits / 2} y="-8" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="ui-monospace, monospace">
+                {scaleKm.toLocaleString()} km
+              </text>
+            </g>
           </svg>
         </div>
 
-        <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
+        <div className="flex flex-col gap-3 min-h-0 xl:overflow-y-auto">
           <div className="p-3 rounded-2xl bg-[#14151c] border border-[#242836]">
-            <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500 mb-1.5">Selected</div>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">Selected</div>
+              {selected ? (
+                <button
+                  type="button"
+                  onClick={() => focusId(selectedId, 6)}
+                  className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-100 transition cursor-pointer"
+                >
+                  <Crosshair className="w-3 h-3" />
+                  Zoom to
+                </button>
+              ) : null}
+            </div>
             {selected ? (
               <>
                 <div className="text-[13px] font-semibold text-white leading-tight">{selected.name}</div>
@@ -475,6 +838,16 @@ export default function PortfolioMapView() {
                     {selected.country || selected.flag}
                   </span>
                 </div>
+                {selected.type === 'mine' ? (
+                  <button
+                    type="button"
+                    onClick={() => openPit(selected)}
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-200 border border-indigo-500/40 transition cursor-pointer"
+                  >
+                    <Mountain className="w-3.5 h-3.5" />
+                    Open 3D pit view
+                  </button>
+                ) : null}
                 <dl className="mt-2 space-y-1 text-[11px]">
                   {selected.commodity ? (
                     <div className="flex justify-between gap-2">
@@ -486,6 +859,12 @@ export default function PortfolioMapView() {
                     <div className="flex justify-between gap-2">
                       <dt className="text-slate-500">Cargo</dt>
                       <dd className="text-slate-200 text-right">{selected.cargo}</dd>
+                    </div>
+                  ) : null}
+                  {selected.payloadLabel ? (
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-slate-500">Payload</dt>
+                      <dd className="text-slate-200 text-right">{selected.payloadLabel}</dd>
                     </div>
                   ) : null}
                   {selected.gradeLabel ? (
@@ -559,7 +938,7 @@ export default function PortfolioMapView() {
                   <li key={v.id}>
                     <button
                       type="button"
-                      onClick={() => setSelectedId(v.id)}
+                      onClick={() => pickAndFocus(v.id)}
                       className="w-full text-left px-2 py-1.5 rounded-lg bg-[#1a1d27] hover:bg-[#222636] border border-[#2a2e3c] transition cursor-pointer"
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -590,7 +969,7 @@ export default function PortfolioMapView() {
                     <div key={s.id} className="flex justify-between gap-2 text-[10.5px] py-0.5">
                       <button
                         type="button"
-                        onClick={() => setSelectedId(s.id)}
+                        onClick={() => pickAndFocus(s.id)}
                         className="text-slate-400 hover:text-slate-200 truncate cursor-pointer text-left"
                       >
                         {s.name}

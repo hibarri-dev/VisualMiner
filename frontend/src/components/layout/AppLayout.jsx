@@ -19,6 +19,10 @@ export default function AppLayout({ children }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false)
   const [activeModal, setActiveModal] = useState(null)
+  // The portfolio asset a 3D view was opened for. Portfolio ids ('moatize') live in a
+  // different space from SITES_CATALOG ids, so this is carried alongside, not through
+  // setSelectedSiteId.
+  const [focusedAsset, setFocusedAsset] = useState(null)
 
   const handleSelectRole = role => {
     setCurrentRole(role)
@@ -28,6 +32,13 @@ export default function AppLayout({ children }) {
     } else if (activeTab === 'manager-desk') {
       setActiveTab('production')
     }
+  }
+
+  /** Cross-view navigation, e.g. clicking a mine on the portfolio map to open its pit. */
+  const handleNavigate = (tab, opts = {}) => {
+    setActiveTab(tab)
+    if (opts.subTab) setActiveSubTab(opts.subTab)
+    if ('asset' in opts) setFocusedAsset(opts.asset)
   }
 
   const handleOpenModal = modalId => {
@@ -58,7 +69,14 @@ export default function AppLayout({ children }) {
     }
   }
 
-  const viewportProps = { activeTab, activeSubTab, currentRole, onOpenModal: handleOpenModal }
+  const viewportProps = {
+    activeTab,
+    activeSubTab,
+    currentRole,
+    onOpenModal: handleOpenModal,
+    onNavigate: handleNavigate,
+    focusedAsset
+  }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#0c0d10] font-sans text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
