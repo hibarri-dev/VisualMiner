@@ -8,6 +8,7 @@ import StageControlBar from '../dashboard/StageControlBar'
 import MiningStageCards from '../dashboard/MiningStageCards'
 import StageBreakdownChart from '../dashboard/StageBreakdownChart'
 import { getStageData } from '../../data/stageDummyData'
+import { MANAGER_SITE_ID } from '../../data/managerDesk'
 import {
   Flame,
   Truck,
@@ -221,7 +222,9 @@ export default function OpsView({ activeTab, currentRole }) {
 
   // Stage Control and Mining Cycle State
   const [activeTimeRange, setActiveTimeRange] = useState('today')
-  const [selectedMine, setSelectedMine] = useState('kulilia')
+  const [selectedMine, setSelectedMine] = useState(
+    currentRole === 'mine_manager' ? MANAGER_SITE_ID : 'kulilia'
+  )
   const [activeMode, setActiveMode] = useState('production')
   const [activeStage, setActiveStage] = useState('extraction')
 
@@ -244,10 +247,11 @@ export default function OpsView({ activeTab, currentRole }) {
       <StageControlBar
         activeTimeRange={activeTimeRange}
         onSelectTimeRange={setActiveTimeRange}
-        selectedMine={selectedMine}
+        selectedMine={currentRole === 'mine_manager' ? MANAGER_SITE_ID : selectedMine}
         onSelectMine={setSelectedMine}
         activeMode={activeMode}
         onSelectMode={setActiveMode}
+        showMineSelect={currentRole !== 'mine_manager'}
       />
 
       {/* 2. Mining Cycle Stage Cards (Preparation, Extraction, Processing, Haulage, Shipping) */}
