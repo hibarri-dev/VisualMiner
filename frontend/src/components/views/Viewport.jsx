@@ -11,17 +11,17 @@ import SiteReportsView from './SiteReportsView'
 import ManagerDeskView from './ManagerDeskView'
 import FeedsView, { GeofenceView, ScheduleView, MessagesView, PortsView } from './CatalogViews'
 
-export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenModal }) {
+export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenModal, onNavigate, focusedAsset }) {
   if (activeTab === 'manager-desk') {
     return <ManagerDeskView />
   }
 
   if (activeTab === 'maps') {
-    return <MapsView currentRole={currentRole} />
+    return <MapsView currentRole={currentRole} focusedAsset={focusedAsset} onNavigate={onNavigate} />
   }
 
   if (activeTab === 'portfolio') {
-    return <PortfolioMapView />
+    return <PortfolioMapView onNavigate={onNavigate} />
   }
 
   if (activeTab === 'sites') {
@@ -60,5 +60,5 @@ export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenM
   if (activeTab === 'messaging') return <MessagesView currentRole={currentRole} />
   if (activeTab === 'ports') return <PortsView currentRole={currentRole} />
 
-  return <MapsView currentRole={currentRole} />
+  return <MapsView currentRole={currentRole} focusedAsset={focusedAsset} onNavigate={onNavigate} />
 }
