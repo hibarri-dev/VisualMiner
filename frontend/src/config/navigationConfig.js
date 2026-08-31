@@ -29,11 +29,18 @@ import {
 } from 'lucide-react'
 
 export const ROLES = [
-  { id: 'executive', label: 'Executive', description: 'Full executive oversight, financial & operational KPIs' },
-  { id: 'admin', label: 'Admin', description: 'System configuration, API integrations & access control' },
+  { id: 'executive', label: 'Executive', description: 'Portfolio map, daily-report inbox, notes with mine managers' },
+  { id: 'admin', label: 'Admin', description: 'Same oversight as executive — feeds, access, register sites' },
   { id: 'mine_manager', label: 'Mine Manager', description: 'One pit — daily production, notes to executives' },
-  { id: 'worker', label: 'Worker', description: 'Personal tag telemetry, tasks & safety broadcasts' }
+  { id: 'worker', label: 'Worker', description: 'One tag, one machine — pit map and radio' }
 ]
+
+export const ROLE_LANDING = {
+  executive: { tab: 'portfolio', sub: null },
+  admin: { tab: 'mines', sub: 'mines-feeds' },
+  mine_manager: { tab: 'manager-desk', sub: null },
+  worker: { tab: 'maps', sub: null }
+}
 
 export const NAVIGATION_ITEMS = [
   {
@@ -242,11 +249,15 @@ const MANAGER_NAV_IDS = [
   'messaging'
 ]
 
+const WORKER_NAV_IDS = ['maps', 'machines', 'humans', 'schedule', 'messaging']
+
 export function getNavigationItems(stats, role) {
-  const base =
-    role === 'mine_manager'
-      ? [MANAGER_DESK_ITEM, ...NAVIGATION_ITEMS.filter(item => MANAGER_NAV_IDS.includes(item.id))]
-      : NAVIGATION_ITEMS
+  let base = NAVIGATION_ITEMS
+  if (role === 'mine_manager') {
+    base = [MANAGER_DESK_ITEM, ...NAVIGATION_ITEMS.filter(item => MANAGER_NAV_IDS.includes(item.id))]
+  } else if (role === 'worker') {
+    base = NAVIGATION_ITEMS.filter(item => WORKER_NAV_IDS.includes(item.id))
+  }
 
   if (!stats) return base
 
@@ -282,7 +293,12 @@ export function getNavigationItems(stats, role) {
       }
     }
     if (item.id === 'shipments') {
-      return { ...item, badge: `${stats.queuedTippers} Queued` }
+      const fraud = stats.fraudFlags || 0
+      return {
+        ...item,
+        badge: fraud > 0 ? `${fraud} fraud` : `${stats.queuedTippers} at gate`,
+        status: fraud > 0 ? 'alert' : item.status
+      }
     }
     if (item.id === 'machines') {
       return {
@@ -314,10 +330,9 @@ export function getNavigationItems(stats, role) {
       }
     }
     if (item.id === 'messaging') {
-      const unread =
-        role === 'mine_manager'
-          ? stats.unreadManagerInbox || 0
-          : stats.unreadMessages
+      let unread = stats.unreadMessages || 0
+      if (role === 'mine_manager') unread = stats.unreadManagerInbox || 0
+      else if (role === 'executive' || role === 'admin') unread = stats.unreadExecutiveInbox || 0
       return {
         ...item,
         badge: unread > 0 ? `${unread} new` : ''

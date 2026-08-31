@@ -12,7 +12,8 @@ import {
   buildSearchIndex,
   sendNote,
   submitDailyReport,
-  markNotificationsRead
+  markNotificationsRead,
+  markInboxRead
 } from '../data'
 import { applyLiveCoal, fetchLiveCoalPrices } from '../data/coalPrices'
 
@@ -98,6 +99,10 @@ export function MineDataProvider({ children }) {
     setMine(prev => markNotificationsRead(prev, role))
   }, [])
 
+  const readInbox = useCallback((role = 'executive') => {
+    setMine(prev => markInboxRead(prev, role))
+  }, [])
+
   const selectSearchResult = useCallback(result => {
     if (result.type === 'machine') setSelectedMachineId(result.id)
     if (result.type === 'worker') setSelectedPersonId(result.id)
@@ -130,6 +135,7 @@ export function MineDataProvider({ children }) {
       postNote,
       postDailyReport,
       readNotifications,
+      readInbox,
       selectSearchResult
     }),
     [
@@ -148,6 +154,7 @@ export function MineDataProvider({ children }) {
       postNote,
       postDailyReport,
       readNotifications,
+      readInbox,
       selectSearchResult
     ]
   )

@@ -189,13 +189,30 @@ export function submitDailyReport(mine, payload) {
   }
 }
 
+export function inboxRole(role) {
+  return role === 'admin' ? 'executive' : role
+}
+
 export function markNotificationsRead(mine, role = 'executive') {
+  const forRole = inboxRole(role)
   return {
     ...mine,
     notifications: (mine.notifications || []).map(n =>
-      n.forRole === role ? { ...n, unread: false } : n
+      n.forRole === forRole ? { ...n, unread: false } : n
     )
   }
+}
+
+export function markNotesRead(mine, role = 'executive') {
+  const toRole = inboxRole(role)
+  return {
+    ...mine,
+    notes: (mine.notes || []).map(n => (n.toRole === toRole ? { ...n, unread: false } : n))
+  }
+}
+
+export function markInboxRead(mine, role = 'executive') {
+  return markNotesRead(markNotificationsRead(mine, role), role)
 }
 
 function siteScoped(rows, siteId) {

@@ -99,7 +99,7 @@ export default function ManagerDeskView() {
         <div className="rounded-xl border border-[#232634] bg-[#16171d] p-4 space-y-1">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Gate queue</div>
           <div className="text-2xl font-semibold text-white">{stats.queuedTippers} tippers</div>
-          <div className="text-[11px] text-slate-400">Held while plant is starved</div>
+          <div className="text-[11px] text-slate-400">Empty in / loaded out · 26–42 t</div>
         </div>
         <div className="rounded-xl border border-[#232634] bg-[#16171d] p-4 space-y-1">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Plant X17</div>
@@ -118,6 +118,38 @@ export default function ManagerDeskView() {
           </div>
         </div>
       </div>
+
+      {(() => {
+        const demo = ['ST-04', 'ST-07', 'ST-11', 'ST-12', 'ST-18']
+        const rows = (mine.tippers || []).filter(t => demo.includes(t.id))
+        if (!rows.length) return null
+        return (
+          <div className="rounded-xl border border-[#232634] bg-[#16171d] p-4 space-y-2 shrink-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Gate · empty in / loaded out
+              </div>
+              <span className="text-[10px] text-slate-500 font-mono">26 / 30 / 34 / 42 t</span>
+            </div>
+            {rows.map(t => (
+              <div key={t.id} className="flex items-start justify-between gap-3 text-xs">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-slate-200">{t.id}</span>
+                    <StatusBadge value={t.event} />
+                    {t.flag === 'fraud_review' && <StatusBadge value="fraud_review" />}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5 truncate">{t.note}</p>
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                  {t.payloadTons} t class
+                  {t.weighbridgeTons != null ? ` · scale ${t.weighbridgeTons}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
 
       {actions.length > 0 && (
         <div className="rounded-xl border border-[#232634] bg-[#16171d] p-4 space-y-2 shrink-0">

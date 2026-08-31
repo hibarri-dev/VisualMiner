@@ -133,6 +133,8 @@ export default function MiningStageCards({
         const isActive = activeStage === stage.id
         const IconComponent = stage.icon
         const metricDisplay = stageMetrics[stage.id]?.metric || stage.metric
+        const metricColor = stageMetrics[stage.id]?.metricColor || 'text-white'
+        const verdict = stageMetrics[stage.id]?.verdict
 
         return (
           <div
@@ -160,9 +162,16 @@ export default function MiningStageCards({
             </div>
 
             {/* Metric Indicator */}
-            <span className="text-sm sm:text-base font-semibold tracking-tight text-white">
-              {metricDisplay}
-            </span>
+            <div className="space-y-0.5">
+              <span className={`text-sm sm:text-base font-semibold tracking-tight ${metricColor}`}>
+                {metricDisplay}
+              </span>
+              {verdict && (
+                <div className={`text-[10px] uppercase tracking-wider ${metricColor}`}>
+                  {verdict === 'making' ? 'making money' : 'losing money'}
+                </div>
+              )}
+            </div>
           </div>
         )
       })}
