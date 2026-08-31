@@ -117,9 +117,48 @@ export function createLabTests() {
 
 export function createSurveyTargets() {
   return [
-    { id: 'tgt-a', siteId: 'kolar-survey-grid', name: 'Anomaly A — west mag high', method: 'Drone LiDAR + ground mag', status: 'follow_up', note: 'No core yet. Surveying only.' },
-    { id: 'tgt-b', siteId: 'kolar-survey-grid', name: 'Anomaly B — quartz ridge', method: 'Photogrammetry', status: 'watch', note: 'Possible QZ-1 strike extension.' },
-    { id: 'tgt-c', siteId: 'kolar-survey-grid', name: 'Anomaly C — low mag', method: 'Drone LiDAR', status: 'deprioritised', note: 'Likely barren. Do not drill first.' }
+    {
+      id: 'tgt-a',
+      siteId: 'kolar-survey-grid',
+      name: 'Anomaly A — west mag high',
+      method: 'Drone LiDAR + ground mag',
+      status: 'follow_up',
+      densityIndex: 4.2,
+      magNt: 840,
+      lat: 12.962,
+      lon: 78.271,
+      nextAction: 'Drill first',
+      estDrillCostUsd: 52000,
+      note: 'Density contrast vs barren C. No core yet.'
+    },
+    {
+      id: 'tgt-b',
+      siteId: 'kolar-survey-grid',
+      name: 'Anomaly B — quartz ridge',
+      method: 'Photogrammetry',
+      status: 'watch',
+      densityIndex: 2.8,
+      magNt: 310,
+      lat: 12.958,
+      lon: 78.279,
+      nextAction: 'Second-order drill',
+      estDrillCostUsd: 41000,
+      note: 'Possible QZ-1 strike extension.'
+    },
+    {
+      id: 'tgt-c',
+      siteId: 'kolar-survey-grid',
+      name: 'Anomaly C — low mag',
+      method: 'Drone LiDAR',
+      status: 'deprioritised',
+      densityIndex: 0.6,
+      magNt: 40,
+      lat: 12.951,
+      lon: 78.265,
+      nextAction: 'Skip — barren',
+      estDrillCostUsd: 48000,
+      note: 'Density too low. Cost avoided by not drilling first.'
+    }
   ]
 }
 

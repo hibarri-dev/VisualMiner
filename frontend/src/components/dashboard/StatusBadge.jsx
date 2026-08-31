@@ -25,7 +25,24 @@ const TONES = {
   ticketed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   watch: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
   cleared: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  queued: 'bg-orange-500/15 text-orange-300 border-orange-500/30'
+  queued: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  follow_up: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  deprioritised: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+  fraud_review: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  indicated: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  inferred: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+  assays_pending: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  pending: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  complete: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  stemmed: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  charged: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+  open: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  hold: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  valid: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  renewal_in_progress: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  extracting: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  deferred_low_grade: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+  extracting_sell_raw: 'bg-amber-500/15 text-amber-300 border-amber-500/30'
 }
 
 export default function StatusBadge({ value }) {

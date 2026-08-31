@@ -16,6 +16,18 @@ import { useVisibleMine } from '../../context/useMineData'
 import { SITE_STAGES } from '../../data'
 import ViewFrame from './ViewFrame'
 
+function siteRows(rows, siteId) {
+  return (rows || []).filter(r => r.siteId === siteId)
+}
+
+function CaptureLine({ children }) {
+  return (
+    <div className="text-[11px] text-slate-300 px-2 py-1.5 rounded bg-[#191b24] border border-[#272b3b]">
+      {children}
+    </div>
+  )
+}
+
 export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
   const { mine, selectedSiteId, setSelectedSiteId } = useVisibleMine(currentRole)
   const [stageFilter, setStageFilter] = useState('all')
@@ -247,12 +259,12 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
                 </div>
               )}
 
-              {/* Test Results & All Site Data to Date */}
+              {/* Stage-specific unique capture — not the generic lithology tiles */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Test Results & Site Data to Date</span>
+                    <span>Stage capture</span>
                   </h4>
                   {selectedSite.testResults.hasData ? (
                     <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
@@ -265,26 +277,77 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
                   )}
                 </div>
 
-                {selectedSite.testResults.hasData ? (
-                  <div className="grid grid-cols-2 gap-2.5 text-xs">
-                    <div className="p-3 rounded-xl bg-[#191b24] border border-[#272b3b]">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Lithology & Strata</span>
-                      <strong className="text-slate-100 font-medium mt-0.5 block">{selectedSite.testResults.lithology}</strong>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#191b24] border border-[#272b3b]">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Assay / Grade Test</span>
-                      <strong className="text-emerald-300 font-mono mt-0.5 block">{selectedSite.testResults.assayGrade}</strong>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#191b24] border border-[#272b3b]">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Recovery / Throughput Rate</span>
-                      <strong className="text-indigo-300 font-mono mt-0.5 block">{selectedSite.testResults.recoveryRate}</strong>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#191b24] border border-[#272b3b]">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Water & Dust Environmental</span>
-                      <strong className="text-slate-200 mt-0.5 block">{selectedSite.testResults.waterQualityIndex} • {selectedSite.testResults.ambientDust}</strong>
-                    </div>
-                  </div>
-                ) : (
+                {selectedSite.stage === 'surveying' && siteRows(mine.surveyTargets, selectedSite.id).map(t => (
+                  <CaptureLine key={t.id}>
+                    {t.name} · density {t.densityIndex} · {t.magNt} nT · {t.nextAction}
+                    <div className="text-[10px] text-slate-500 mt-0.5">Drill cost {t.estDrillCostUsd ? `$${t.estDrillCostUsd.toLocaleString()}` : '—'} · {t.note}</div>
+                  </CaptureLine>
+                ))}
+
+                {selectedSite.stage === 'surveying' && siteRows(mine.cycleCapture?.surveying?.flights, selectedSite.id).map(f => (
+                  <CaptureLine key={f.id}>
+                    {f.date} · {f.method} · {f.areaKm2} km² · GSD {f.gsdCm} cm · {f.coveragePercent}% coverage
+                  </CaptureLine>
+                ))}
+
+                {selectedSite.stage === 'prospecting' && siteRows(mine.cycleCapture?.prospecting?.collars, selectedSite.id).map(c => (
+                  <CaptureLine key={c.id}>
+                    {c.holeId} · az {c.azimuth}° · dip {c.dip}° · {c.depthM} m · rec {c.recoveryPercent}% · {c.resourceClass}
+                  </CaptureLine>
+                ))}
+
+                {selectedSite.stage === 'prospecting' && siteRows(mine.cycleCapture?.prospecting?.intercepts, selectedSite.id).map(i => (
+                  <CaptureLine key={i.id}>
+                    {i.holeId} · true width {i.trueWidthM} m · {i.grade} · lab {i.labTurnaroundH} h ({i.labStatus})
+                  </CaptureLine>
+                ))}
+
+                {(selectedSite.stage === 'extraction' || selectedSite.stage === 'processing') && siteRows(mine.cycleCapture?.production?.blasts, selectedSite.id).map(b => (
+                  <CaptureLine key={b.id}>
+                    {b.bench} · {b.easting}E {b.northing}N RL {b.rl} · az {b.azimuth}° · dip {b.dip}° · {b.holes} holes
+                  </CaptureLine>
+                ))}
+
+                {siteRows(mine.cycleCapture?.production?.extraction, selectedSite.id).map(r => (
+                  <CaptureLine key={r.id}>
+                    {r.pit} · {r.ore} · {r.tons} t · {r.timeSpentH} h · {r.method} · yield {r.yieldPercent}%
+                  </CaptureLine>
+                ))}
+
+                {siteRows(mine.cycleCapture?.production?.diesel, selectedSite.id).map(d => (
+                  <CaptureLine key={d.id}>
+                    {d.asset} · {d.litres} L · {d.litresPerTon} L/t · cycle {d.cycleMin} min
+                  </CaptureLine>
+                ))}
+
+                {(selectedSite.stage === 'transport' || selectedSite.stage === 'extraction' || selectedSite.stage === 'processing') &&
+                  siteRows(mine.cycleCapture?.production?.fraud, selectedSite.id).map(f => (
+                    <CaptureLine key={f.id}>
+                      {f.vehicle} · variance {f.variancePercent}% · {f.flag} · {f.note}
+                    </CaptureLine>
+                  ))}
+
+                {siteRows(mine.cycleCapture?.production?.weather, selectedSite.id).map(w => (
+                  <CaptureLine key={w.id}>
+                    {w.at} · wind {w.windKph} kph · rain {w.rainMm} mm · blast {w.blastWindow} · {w.note}
+                  </CaptureLine>
+                ))}
+
+                {(selectedSite.stage === 'licensing' || selectedSite.stage === 'extraction') &&
+                  siteRows(mine.cycleCapture?.production?.licenses, selectedSite.id).map(l => (
+                    <CaptureLine key={l.id}>
+                      {l.permitId} · {l.type} · {l.expires} · bond {l.rehabBondInr} · {l.status}
+                      {l.note ? <div className="text-[10px] text-slate-500 mt-0.5">{l.note}</div> : null}
+                    </CaptureLine>
+                  ))}
+
+                {siteRows(mine.cycleCapture?.production?.coal, selectedSite.id).map(c => (
+                  <CaptureLine key={c.id}>
+                    {c.index} ${c.usdPerT}/t · {c.basis} · as of {c.asOf} · {c.note}
+                  </CaptureLine>
+                ))}
+
+                {!selectedSite.testResults.hasData && selectedSite.stage !== 'surveying' && selectedSite.stage !== 'prospecting' && (
                   <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-amber-300 space-y-2">
                     <p className="leading-relaxed">
                       This site was provisioned without initial test records (skipped by user). Assay logs, geological core assays, or water quality sensors can be attached at any time.
@@ -299,18 +362,6 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
                   </div>
                 )}
               </div>
-
-              {(mine.surveyTargets || []).filter(t => t.siteId === selectedSite.id).length > 0 && (
-                <div className="space-y-1.5">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Survey targets</h4>
-                  {(mine.surveyTargets || []).filter(t => t.siteId === selectedSite.id).map(t => (
-                    <div key={t.id} className="text-[11px] text-slate-300 px-2 py-1.5 rounded bg-[#191b24] border border-[#272b3b]">
-                      {t.name} · {t.method}
-                      <div className="text-[10px] text-slate-500 mt-0.5">{t.note}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
 
               {(mine.oreBodies || []).filter(b => b.siteId === selectedSite.id).length > 0 && (
                 <div className="space-y-1.5">

@@ -43,7 +43,7 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
           </div>
         </div>
 
-        {!geology && (mine.insights || []).slice(0, 4).map(ins => (
+        {!geology && activeTab === 'cycle' && (mine.cycleCapture?.insights || []).map(ins => (
           <div key={ins.id} className="space-y-1 pb-3 border-b border-[#232530]">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{ins.area}</div>
             <h3 className="text-[14px] sm:text-[15px] font-semibold text-white tracking-tight leading-snug">{ins.title}</h3>
@@ -51,7 +51,15 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
           </div>
         ))}
 
-        {!geology && (mine.alerts || []).length > 0 && (
+        {!geology && activeTab !== 'cycle' && (mine.insights || []).slice(0, 4).map(ins => (
+          <div key={ins.id} className="space-y-1 pb-3 border-b border-[#232530]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{ins.area}</div>
+            <h3 className="text-[14px] sm:text-[15px] font-semibold text-white tracking-tight leading-snug">{ins.title}</h3>
+            <p className="text-[12px] text-slate-400 leading-relaxed">{ins.detail}</p>
+          </div>
+        ))}
+
+        {!geology && activeTab !== 'cycle' && (mine.alerts || []).length > 0 && (
           <div className="space-y-2">
             <h3 className="text-[13px] font-semibold text-white tracking-tight">Live alerts</h3>
             {(mine.alerts || []).map(al => (
@@ -65,6 +73,8 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
           </div>
         )}
 
+        {!geology && activeTab !== 'cycle' && (
+        <>
         {/* 1. Extraction / Project */}
         <div className="space-y-2">
           <h3 className="text-[16px] sm:text-[17px] font-semibold text-white tracking-tight">
@@ -122,12 +132,18 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
 
       {/* Bottom AI Action */}
       <div className="pt-6 border-t border-[#232530] space-y-2 mt-4">
         <div className="text-[10px] text-slate-400 font-mono">
-          {geology ? `${drillMeta.project?.code || 'NFGC-QW'} · NI 43-101 · Public filings` : `${mine.site.code} · Shift ${mine.site.currentShift} · Telemetry Live`}
+          {geology
+            ? `${drillMeta.project?.code || 'NFGC-QW'} · NI 43-101 · Public filings`
+            : activeTab === 'cycle'
+              ? 'Cycle capture · density · collars · blast · diesel · fraud'
+              : `${mine.site.code} · Shift ${mine.site.currentShift} · Telemetry Live`}
         </div>
         <button
           onClick={() => {
