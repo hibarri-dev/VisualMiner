@@ -11,7 +11,7 @@ import { useMineData } from '../../context/useMineData'
 
 export default function AppLayout({ children }) {
   const { selectSearchResult } = useMineData()
-  const [activeTab, setActiveTab] = useState('maps')
+  const [activeTab, setActiveTab] = useState('production')
   const [activeSubTab, setActiveSubTab] = useState('mines-models')
   const [currentRole, setCurrentRole] = useState('executive')
   const [searchQuery, setSearchQuery] = useState('')

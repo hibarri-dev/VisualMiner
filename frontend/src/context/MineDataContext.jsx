@@ -5,12 +5,13 @@ import {
   addPersonToMine,
   addSiteToMine,
   acceptDraftHandover,
-  buildSearchIndex,
   createMineState,
   ingestSiteReport,
   liveStats,
-  tickMine
+  tickMine,
+  buildSearchIndex
 } from '../data'
+import { applyLiveCoal, fetchLiveCoalPrices } from '../data/coalPrices'
 
 export function MineDataProvider({ children }) {
   const [mine, setMine] = useState(() => createMineState())
@@ -29,6 +30,22 @@ export function MineDataProvider({ children }) {
       setMine(prev => tickMine(prev))
     }, 2500)
     return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchLiveCoalPrices()
+      .then(quotes => {
+        if (cancelled || !quotes.length) return
+        setMine(prev => ({
+          ...prev,
+          cycleCapture: applyLiveCoal(prev.cycleCapture, quotes)
+        }))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const ingestReport = useCallback(submission => {

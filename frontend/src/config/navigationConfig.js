@@ -58,6 +58,13 @@ export const NAVIGATION_ITEMS = [
     ]
   },
   {
+    id: 'cycle',
+    label: 'Cycle',
+    icon: Activity,
+    badge: 'Capture',
+    description: 'Surveying, prospecting and production fields unique to each stage'
+  },
+  {
     id: 'mines',
     label: 'Mines',
     icon: Mountain,
