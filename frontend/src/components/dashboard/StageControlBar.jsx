@@ -41,7 +41,7 @@ export default function StageControlBar({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-2 pb-3">
       {/* 1. Date Range Segmented Pill Group (Matching Mockup Pill Container) */}
-      <div className="inline-flex items-center bg-[#1e1f24] rounded-xl px-2 py-1.5 gap-2 sm:gap-4 shadow-inner">
+      <div className="flex items-center bg-[#1e1f24] rounded-xl px-2 py-1.5 gap-2 sm:gap-4 shadow-inner max-w-full overflow-x-auto">
         {TIME_RANGES.map(range => {
           const isSelected = activeTimeRange === range.id
           return (
@@ -49,7 +49,7 @@ export default function StageControlBar({
               key={range.id}
               type="button"
               onClick={() => onSelectTimeRange && onSelectTimeRange(range.id)}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-normal transition-all duration-150 cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-normal transition-all duration-150 cursor-pointer ${
                 isSelected
                   ? 'bg-[#d1d5db] text-[#121316] font-medium shadow-sm'
                   : 'text-slate-200 hover:text-white hover:bg-[#282a32]'

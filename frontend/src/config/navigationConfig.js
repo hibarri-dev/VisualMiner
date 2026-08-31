@@ -15,7 +15,6 @@ import {
   Database,
   Layers,
   Shield,
-  Radio,
   Cpu,
   Activity,
   Workflow,
@@ -37,10 +36,67 @@ export const ROLES = [
 
 export const ROLE_LANDING = {
   executive: { tab: 'portfolio', sub: null },
-  admin: { tab: 'mines', sub: 'mines-feeds' },
+  admin: { tab: 'sites', sub: 'sitetool-feeds' },
   mine_manager: { tab: 'manager-desk', sub: null },
   worker: { tab: 'maps', sub: null }
 }
+
+/**
+ * Sites are grouped so a mine still reads as a mine after the Mines section was folded
+ * in. Order here is the order they appear in the nav.
+ */
+export const SITE_GROUPS = [
+  { id: 'mines', label: 'Mines' },
+  { id: 'plants', label: 'Processing plants' },
+  { id: 'exploration', label: 'Exploration & survey' },
+  { id: 'logistics', label: 'Ports & logistics' },
+  { id: 'tools', label: 'Site tools' }
+]
+
+const GROUP_ORDER = SITE_GROUPS.reduce((acc, g, i) => ({ ...acc, [g.id]: i }), {})
+
+const TYPE_GROUP = {
+  open_pit: 'mines',
+  wash_plant: 'plants',
+  crushing_plant: 'plants',
+  exploration: 'exploration',
+  port_terminal: 'logistics'
+}
+
+/** Falls back to the stage when a site carries a type we do not map yet. */
+export function groupForSite(site) {
+  return TYPE_GROUP[site.type] || (site.stage === 'processing' ? 'plants' : 'exploration')
+}
+
+/**
+ * Site-level tooling. A mine is a site, so these hang off Sites rather than a parallel
+ * "Mines" section — the split meant an open pit appeared in two places in the nav.
+ * Held apart from the site list because getNavigationItems rebuilds that list from live
+ * stats on every render and would otherwise drop them.
+ */
+export const SITE_TOOLS = [
+  { id: 'sitetool-orebody', label: '3D Ore Body Model (NI 43-101)', icon: Layers, badge: 'Live', group: 'tools' },
+  {
+    id: 'sitetool-feeds',
+    label: 'Data Feed APIs',
+    icon: Database,
+    badge: '10 feeds',
+    group: 'tools',
+    subItems: [
+      { id: 'feed-cat', name: 'CAT Fleet System', status: 'connected', latency: '42ms' },
+      { id: 'feed-sap', name: 'SAP ERP', status: 'connected', latency: '120ms' },
+      { id: 'feed-scada', name: 'SCADA Telemetry', status: 'live', latency: '18ms' },
+      { id: 'feed-hexagon', name: 'Hexagon Mining', status: 'connected', latency: '65ms' },
+      { id: 'feed-deswik', name: 'Deswik Mine Planning', status: 'syncing', latency: '210ms' },
+      { id: 'feed-micromine', name: 'Micromine Geological', status: 'connected', latency: '90ms' },
+      { id: 'feed-arcgis', name: 'ArcGIS Geospatial', status: 'connected', latency: '55ms' },
+      { id: 'feed-drone', name: 'Drone LiDAR System', status: 'live', latency: '30ms' },
+      { id: 'feed-cmms', name: 'CMMS Maintenance', status: 'connected', latency: '140ms' },
+      { id: 'feed-lab', name: 'Laboratory Assay System', status: 'connected', latency: '80ms' }
+    ]
+  },
+  { id: 'sitetool-geofence', label: 'Geofence & Zones', icon: Shield, badge: '6 active', group: 'tools' }
+]
 
 export const NAVIGATION_ITEMS = [
   {
@@ -62,14 +118,15 @@ export const NAVIGATION_ITEMS = [
     label: 'Sites',
     icon: Compass,
     badge: '10 Managed',
-    description: 'Mining assets, washplants, crushing plants, exploration stages & test results',
+    description: 'Mines, washplants, crushing plants, exploration stages, ore-body models & test results',
     quickAction: { label: 'Register Site', modalId: 'register-site' },
     children: [
-      { id: 'site-kolar-north', label: 'Kolar North Open Pit', stage: 'mining', stageLabel: 'Mining', typeLabel: 'Open Pit Mine', badge: 'Active' },
-      { id: 'site-washplant-south', label: 'South Basin Wash Plant', stage: 'processing', stageLabel: 'Processing', typeLabel: 'Wash Plant (No Mine)', badge: 'Plant' },
-      { id: 'site-hospet-crushing', label: 'Hospet Crushing Plant', stage: 'processing', stageLabel: 'Processing', typeLabel: 'Crushing Plant (No Mine)', badge: 'Plant' },
-      { id: 'site-chitradurga', label: 'Chitradurga East Ridge', stage: 'prospecting', stageLabel: 'Prospecting', typeLabel: 'Prospecting & Assay', badge: 'Survey' },
-      { id: 'site-mangalore-port', label: 'New Mangalore Bulk Port', stage: 'processing', stageLabel: 'Logistics', typeLabel: 'Customer-Owned Port', badge: 'Port' }
+      { id: 'site-kolar-north', label: 'Kolar North Open Pit', stage: 'mining', stageLabel: 'Mining', typeLabel: 'Open Pit Mine', badge: 'Active', group: 'mines' },
+      { id: 'site-washplant-south', label: 'South Basin Wash Plant', stage: 'processing', stageLabel: 'Processing', typeLabel: 'Wash Plant (No Mine)', badge: 'Plant', group: 'plants' },
+      { id: 'site-hospet-crushing', label: 'Hospet Crushing Plant', stage: 'processing', stageLabel: 'Processing', typeLabel: 'Crushing Plant (No Mine)', badge: 'Plant', group: 'plants' },
+      { id: 'site-chitradurga', label: 'Chitradurga East Ridge', stage: 'prospecting', stageLabel: 'Prospecting', typeLabel: 'Prospecting & Assay', badge: 'Survey', group: 'exploration' },
+      { id: 'site-mangalore-port', label: 'New Mangalore Bulk Port', stage: 'processing', stageLabel: 'Logistics', typeLabel: 'Customer-Owned Port', badge: 'Port', group: 'logistics' },
+      ...SITE_TOOLS
     ]
   },
   {
@@ -78,34 +135,6 @@ export const NAVIGATION_ITEMS = [
     icon: Activity,
     badge: 'Capture',
     description: 'Surveying, prospecting and production fields unique to each stage'
-  },
-  {
-    id: 'mines',
-    label: 'Mines',
-    icon: Mountain,
-    description: 'Active open pit models, telemetry feeds & geofences',
-    children: [
-      { id: 'mines-models', label: '3D Mine Models (NI 43-101)', icon: Layers, badge: 'Live' },
-      {
-        id: 'mines-feeds',
-        label: 'Data Feed APIs',
-        icon: Database,
-        badge: '10 feeds',
-        subItems: [
-          { id: 'feed-cat', name: 'CAT Fleet System', status: 'connected', latency: '42ms' },
-          { id: 'feed-sap', name: 'SAP ERP', status: 'connected', latency: '120ms' },
-          { id: 'feed-scada', name: 'SCADA Telemetry', status: 'live', latency: '18ms' },
-          { id: 'feed-hexagon', name: 'Hexagon Mining', status: 'connected', latency: '65ms' },
-          { id: 'feed-deswik', name: 'Deswik Mine Planning', status: 'syncing', latency: '210ms' },
-          { id: 'feed-micromine', name: 'Micromine Geological', status: 'connected', latency: '90ms' },
-          { id: 'feed-arcgis', name: 'ArcGIS Geospatial', status: 'connected', latency: '55ms' },
-          { id: 'feed-drone', name: 'Drone LiDAR System', status: 'live', latency: '30ms' },
-          { id: 'feed-cmms', name: 'CMMS Maintenance', status: 'connected', latency: '140ms' },
-          { id: 'feed-lab', name: 'Laboratory Assay System', status: 'connected', latency: '80ms' }
-        ]
-      },
-      { id: 'mines-geofence', label: 'Geofence & Zones', icon: Shield, badge: '6 active' }
-    ]
   },
   {
     id: 'processing',
@@ -267,14 +296,20 @@ export function getNavigationItems(stats, role) {
       return {
         ...item,
         badge: `${stats.sitesCount || sites.length} Managed`,
-        children: sites.map(site => ({
-          id: `site-${site.id}`,
-          label: site.name,
-          stage: site.stage,
-          stageLabel: site.stageLabel,
-          typeLabel: site.typeLabel,
-          badge: site.stageLabel
-        })),
+        children: [
+          ...sites
+            .map(site => ({
+              id: `site-${site.id}`,
+              label: site.name,
+              stage: site.stage,
+              stageLabel: site.stageLabel,
+              typeLabel: site.typeLabel,
+              badge: site.stageLabel,
+              group: groupForSite(site)
+            }))
+            .sort((a, b) => GROUP_ORDER[a.group] - GROUP_ORDER[b.group]),
+          ...SITE_TOOLS
+        ],
         quickAction: role === 'mine_manager' ? undefined : item.quickAction
       }
     }
