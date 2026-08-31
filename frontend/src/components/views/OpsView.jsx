@@ -7,6 +7,10 @@ import Sparkline from '../dashboard/Sparkline'
 import StageControlBar from '../dashboard/StageControlBar'
 import MiningStageCards from '../dashboard/MiningStageCards'
 import StageBreakdownChart from '../dashboard/StageBreakdownChart'
+import WeighbridgeLogistics from '../dashboard/WeighbridgeLogistics'
+import ProfitLossIndicators from '../dashboard/ProfitLossIndicators'
+import ManagerExecNotes from '../dashboard/ManagerExecNotes'
+import DailyProductionReportModal from '../modals/DailyProductionReportModal'
 import { getStageData } from '../../data/stageDummyData'
 import { MANAGER_SITE_ID } from '../../data/managerDesk'
 import {
@@ -90,10 +94,10 @@ function StageContextTelemetry({ stage, stats, mine }) {
         </div>
         <div className="p-3.5 rounded-xl bg-[#16171d] border border-[#232634]">
           <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
-            <Truck className="w-4 h-4" /> Shovels & Excavators
+            <Truck className="w-4 h-4" /> Shovels &amp; Excavators
           </div>
           <div className="text-xl font-bold text-white">{stats.excavators || 11} Units</div>
-          <div className="text-[11px] text-slate-400 mt-1">Bench 4 North & Bench 2</div>
+          <div className="text-[11px] text-slate-400 mt-1">Bench 4 North &amp; Bench 2</div>
         </div>
         <div className="p-3.5 rounded-xl bg-[#16171d] border border-[#232634]">
           <div className="flex items-center gap-2 text-sky-400 text-xs font-semibold mb-1">
@@ -119,7 +123,7 @@ function StageContextTelemetry({ stage, stats, mine }) {
         </div>
         <div className="p-3.5 rounded-xl bg-[#16171d] border border-[#232634]">
           <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
-            <Workflow className="w-4 h-4" /> Screening & Washing
+            <Workflow className="w-4 h-4" /> Screening &amp; Washing
           </div>
           <div className="text-xl font-bold text-white">{stats.screeningTph || 5} t/h</div>
           <div className="text-[11px] text-slate-400 mt-1">Wash Plant operational</div>
@@ -227,6 +231,8 @@ export default function OpsView({ activeTab, currentRole }) {
   )
   const [activeMode, setActiveMode] = useState('production')
   const [activeStage, setActiveStage] = useState(activeTab === 'shipments' ? 'shipping' : 'extraction')
+  const [isDailyReportModalOpen, setIsDailyReportModalOpen] = useState(false)
+  const [notificationBanner, setNotificationBanner] = useState(null)
 
   useEffect(() => {
     if (activeTab === 'shipments') setActiveStage('shipping')
@@ -239,10 +245,17 @@ export default function OpsView({ activeTab, currentRole }) {
     return getStageData(selectedMine, activeTimeRange, activeStage)
   }, [selectedMine, activeTimeRange, activeStage])
 
+  const handleDailyReportSubmitted = report => {
+    setNotificationBanner({
+      title: `Daily Production Report Received (${report.site} · ${report.shift})`,
+      message: `Submitted by ${report.managerName}: ${report.extractionTons}t ROM mined. Note: ${report.managerNotes}`
+    })
+  }
+
   const titles = {
     production: ['Production Stage', 'Executive mining cycle overview, stage yield & bottleneck telemetry.'],
     processing: ['Processing', 'ROM → named concentrate piles (42 / 50 / 60%). Plant yield is the bottleneck, not the pit.'],
-    shipments: ['Shipments', 'Gate queue + weighbridge. Sold cargo cannot load until crushed / certified piles exist.'],
+    shipments: ['Shipments & Logistics Hub', 'Gate queue, weighbridge fraud detection & Jindal captive rail sidings.'],
     collections: ['Collections', 'Named stockpiles by purity — including chrome concentrate and anthracite sold raw.']
   }
   const [title, description] = titles[activeTab] || titles.production
@@ -280,7 +293,21 @@ export default function OpsView({ activeTab, currentRole }) {
         mine={mine}
       />
 
-      {/* 5. Detailed Data Tables & Alerts */}
+      {/* 5. Economic Impact Analysis: Money-Making vs Money-Losing Bottlenecks */}
+      <ProfitLossIndicators activeStage={activeStage} />
+
+      {/* 6. Gate & Weighbridge Logistics + Jindal Captive Rail Section */}
+      <WeighbridgeLogistics />
+
+      {/* 7. Shared Executive & Mine Manager Directives Stream */}
+      <ManagerExecNotes
+        currentRole={currentRole}
+        onOpenReportModal={() => setIsDailyReportModalOpen(true)}
+        notificationBanner={notificationBanner}
+        onDismissNotification={() => setNotificationBanner(null)}
+      />
+
+      {/* 8. Detailed Data Tables & Alerts */}
       {activeStage === 'extraction' && (
         <DataTable
           columns={[
@@ -378,6 +405,14 @@ export default function OpsView({ activeTab, currentRole }) {
           ]}
         />
       )}
+
+      {/* Daily Production Report Modal */}
+      <DailyProductionReportModal
+        isOpen={isDailyReportModalOpen}
+        onClose={() => setIsDailyReportModalOpen(false)}
+        onSubmitReport={handleDailyReportSubmitted}
+        currentSite={selectedMine === 'kulilia' ? 'Kulilia Mine' : selectedMine}
+      />
     </ViewFrame>
   )
 }
