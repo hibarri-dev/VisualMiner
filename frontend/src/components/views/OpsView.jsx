@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useVisibleMine } from '../../context/useMineData'
 import ViewFrame from './ViewFrame'
 import DataTable from '../dashboard/DataTable'
@@ -182,24 +182,24 @@ function StageContextTelemetry({ stage, stats, mine }) {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 my-3">
         <div className="p-3.5 rounded-xl bg-[#16171d] border border-amber-900/30">
           <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
-            <Truck className="w-4 h-4" /> Gate Queue
+            <Truck className="w-4 h-4" /> Empty at gate
           </div>
-          <div className="text-xl font-bold text-amber-300">{stats.queuedTippers} Tippers</div>
-          <div className="text-[11px] text-amber-400 mt-1">Held until crushed fines exist</div>
+          <div className="text-xl font-bold text-amber-300">{stats.arrivedEmpty ?? stats.queuedTippers} in</div>
+          <div className="text-[11px] text-amber-400 mt-1">{stats.gateHeld || 0} held · {stats.queuedTippers} waiting</div>
         </div>
         <div className="p-3.5 rounded-xl bg-[#16171d] border border-[#232634]">
           <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold mb-1">
-            <CheckCircle2 className="w-4 h-4" /> Weighbridge Throughput
+            <CheckCircle2 className="w-4 h-4" /> Departed loaded
           </div>
-          <div className="text-xl font-bold text-white">240 t/h</div>
-          <div className="text-[11px] text-slate-400 mt-1">Anthracite raw clearing</div>
+          <div className="text-xl font-bold text-white">{stats.departedLoaded || 0} out</div>
+          <div className="text-[11px] text-slate-400 mt-1">Payload class 26 / 30 / 34 / 42 t</div>
         </div>
-        <div className="p-3.5 rounded-xl bg-[#16171d] border border-[#232634]">
-          <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold mb-1">
-            <Workflow className="w-4 h-4" /> Mangalore Port Terminal
+        <div className="p-3.5 rounded-xl bg-[#16171d] border border-rose-900/30">
+          <div className="flex items-center gap-2 text-rose-400 text-xs font-semibold mb-1">
+            <AlertTriangle className="w-4 h-4" /> Weighbridge fraud
           </div>
-          <div className="text-xl font-bold text-white">Pier C Loading</div>
-          <div className="text-[11px] text-slate-400 mt-1">450 t/h transshipment rate</div>
+          <div className="text-xl font-bold text-rose-300">{stats.fraudFlags || 0} flags</div>
+          <div className="text-[11px] text-slate-400 mt-1">Declared vs scale ≥ 5%</div>
         </div>
         <div className="p-3.5 rounded-xl bg-[#16171d] border border-[#232634]">
           <div className="flex items-center gap-2 text-sky-400 text-xs font-semibold mb-1">
@@ -226,7 +226,13 @@ export default function OpsView({ activeTab, currentRole }) {
     currentRole === 'mine_manager' ? MANAGER_SITE_ID : 'kulilia'
   )
   const [activeMode, setActiveMode] = useState('production')
-  const [activeStage, setActiveStage] = useState('extraction')
+  const [activeStage, setActiveStage] = useState(activeTab === 'shipments' ? 'shipping' : 'extraction')
+
+  useEffect(() => {
+    if (activeTab === 'shipments') setActiveStage('shipping')
+    else if (activeTab === 'processing') setActiveStage('processing')
+    else if (activeTab === 'production') setActiveStage('extraction')
+  }, [activeTab])
 
   // Dynamic stage data based on user selection
   const stageData = useMemo(() => {
@@ -331,10 +337,12 @@ export default function OpsView({ activeTab, currentRole }) {
           <DataTable
             columns={[
               { key: 'id', label: 'Tipper' },
-              { key: 'type', label: 'Type' },
-              { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> },
-              { key: 'waitMin', label: 'Wait', render: r => `${r.waitMin} min` },
+              { key: 'event', label: 'Gate', render: r => <StatusBadge value={r.event || r.status} /> },
+              { key: 'payloadTons', label: 'Class t' },
+              { key: 'declaredTons', label: 'Declared t' },
+              { key: 'weighbridgeTons', label: 'Scale t', render: r => (r.weighbridgeTons == null ? '—' : r.weighbridgeTons) },
               { key: 'cargo', label: 'Cargo' },
+              { key: 'waitMin', label: 'Wait', render: r => `${r.waitMin} min` },
               { key: 'destination', label: 'Destination' }
             ]}
             rows={mine.tippers}
@@ -343,10 +351,12 @@ export default function OpsView({ activeTab, currentRole }) {
             columns={[
               { key: 'vehicle', label: 'Weighbridge' },
               { key: 'pile', label: 'Named pile' },
-              { key: 'plannedKg', label: 'Planned kg' },
-              { key: 'actualKg', label: 'Actual kg' },
-              { key: 'waitMin', label: 'Gate wait', render: r => `${r.waitMin} min` },
-              { key: 'status', label: 'Status', render: r => <StatusBadge value={r.status} /> }
+              { key: 'payloadTons', label: 'Class t' },
+              { key: 'declaredKg', label: 'Declared kg' },
+              { key: 'actualKg', label: 'Scale kg' },
+              { key: 'variancePercent', label: 'Var %', render: r => (r.variancePercent == null ? '—' : `${r.variancePercent}%`) },
+              { key: 'flag', label: 'Flag', render: r => <StatusBadge value={r.flag || r.status} /> },
+              { key: 'note', label: 'Note' }
             ]}
             rows={mine.weighbridge || []}
           />

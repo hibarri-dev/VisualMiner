@@ -8,7 +8,10 @@ export {
   PLANT_STATUS_OPTIONS,
   sendNote,
   submitDailyReport,
-  markNotificationsRead
+  markNotificationsRead,
+  markNotesRead,
+  markInboxRead,
+  inboxRole
 } from './managerDesk'
 export { MACHINE_TYPES, MACHINE_TYPE_LIST, MACHINE_ZONES, FEATURED_MACHINES } from './machines'
 export { FEATURED_PERSONNEL, personForMachine } from './personnel'

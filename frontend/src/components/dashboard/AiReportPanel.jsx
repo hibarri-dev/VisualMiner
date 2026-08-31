@@ -1,12 +1,20 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { Bell, Sparkles, X } from 'lucide-react'
 import Sparkline from './Sparkline'
 import { useMineData } from '../../context/useMineData'
 import { explorationNarrative } from '../../data/explorationProject'
 import { drillMeta } from '../../three/oreBody'
+import { inboxRole } from '../../data/managerDesk'
 
-export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onCloseDrawer, activeTab }) {
-  const { mine } = useMineData()
+export default function AiReportPanel({
+  onOpenReportModal,
+  isOpenDrawer,
+  onCloseDrawer,
+  activeTab,
+  currentRole = 'executive'
+}) {
+  const { mine, readInbox } = useMineData()
+  const [inboxOpen, setInboxOpen] = useState(false)
   const { production } = mine
   const trendSign = production.weekTrendPercent > 0 ? 'Up' : 'Down'
   const geology = activeTab === 'mines'
@@ -14,6 +22,35 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
   const metresSeries = geology
     ? Object.values(drillMeta.metresByYear || { 2021: 0, 2022: 0, 2023: 0, 2024: 1 })
     : production.extractionHistory
+
+  const peer = inboxRole(currentRole)
+  const seesNotes = currentRole === 'executive' || currentRole === 'admin' || currentRole === 'mine_manager'
+  const notifications = seesNotes
+    ? (mine.notifications || []).filter(n => n.forRole === peer)
+    : []
+  const notesIn = seesNotes ? (mine.notes || []).filter(n => n.toRole === peer) : []
+  const unreadCount =
+    notifications.filter(n => n.unread).length + notesIn.filter(n => n.unread).length
+
+  const inboxItems = useMemo(() => {
+    const ntf = notifications.map(n => ({
+      id: n.id,
+      kind: 'report',
+      unread: n.unread,
+      title: n.title,
+      detail: n.detail,
+      at: n.at
+    }))
+    const nts = notesIn.map(n => ({
+      id: n.id,
+      kind: 'note',
+      unread: n.unread,
+      title: `${n.author} → ${n.toRole.replace('_', ' ')}`,
+      detail: n.body,
+      at: n.at
+    }))
+    return [...ntf, ...nts].sort((a, b) => Number(b.unread) - Number(a.unread))
+  }, [notifications, notesIn])
 
   const panelContent = (
     <div className="h-full flex flex-col justify-between bg-[#16171d] text-slate-200 p-5 sm:p-6 select-none overflow-y-auto">
@@ -27,10 +64,67 @@ export default function AiReportPanel({ onOpenReportModal, isOpenDrawer, onClose
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="text-slate-300 hover:text-white transition p-1">
-              <Bell className="w-5 h-5 fill-slate-200 text-slate-200" />
-            </button>
+          <div className="flex items-center gap-2 relative">
+            {seesNotes && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setInboxOpen(open => !open)}
+                  className="relative text-slate-300 hover:text-white transition p-1"
+                  aria-label="Inbox"
+                >
+                  <Bell className="w-5 h-5 fill-slate-200 text-slate-200" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {inboxOpen && (
+                  <div className="absolute right-0 top-8 z-20 w-72 rounded-xl border border-[#2a2e3c] bg-[#14151c] shadow-2xl p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        {currentRole === 'mine_manager' ? 'Notes from executives' : 'Daily reports & notes'}
+                      </span>
+                      {unreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            readInbox(currentRole)
+                            setInboxOpen(false)
+                          }}
+                          className="text-[10px] text-indigo-300 hover:text-indigo-200"
+                        >
+                          Mark read
+                        </button>
+                      )}
+                    </div>
+                    {inboxItems.length === 0 && (
+                      <p className="text-[11px] text-slate-500">Nothing in the dummy inbox yet.</p>
+                    )}
+                    {inboxItems.slice(0, 6).map(item => (
+                      <div
+                        key={item.id}
+                        className={`rounded-lg border px-2.5 py-2 ${
+                          item.unread ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-[#272b3b] bg-[#191b24]'
+                        }`}
+                      >
+                        <div className="text-[11px] font-semibold text-slate-200 leading-snug">{item.title}</div>
+                        <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{item.detail}</p>
+                        <div className="text-[9px] font-mono text-slate-500 mt-1">
+                          {item.kind} · {item.at}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+            {!seesNotes && (
+              <button type="button" className="text-slate-300 hover:text-white transition p-1" aria-label="Alerts">
+                <Bell className="w-5 h-5 fill-slate-200 text-slate-200" />
+              </button>
+            )}
             {onCloseDrawer && (
               <button
                 type="button"

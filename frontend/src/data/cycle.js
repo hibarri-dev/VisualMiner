@@ -162,13 +162,7 @@ export function createSurveyTargets() {
   ]
 }
 
-export function createWeighbridge() {
-  return [
-    { id: 'wb-01', vehicle: 'ST-04', pile: 'Concentrate 50%', plannedKg: 28000, actualKg: 0, status: 'held_gate', waitMin: 71 },
-    { id: 'wb-02', vehicle: 'ST-09', pile: 'Concentrate 42%', plannedKg: 26000, actualKg: 0, status: 'held_gate', waitMin: 54 },
-    { id: 'wb-03', vehicle: 'ST-11', pile: 'Anthracite Seam A (raw)', plannedKg: 30000, actualKg: 29840, status: 'ticketed', waitMin: 12 }
-  ]
-}
+export { createWeighbridge } from './logistics'
 
 export function createCommunities() {
   return [
@@ -199,7 +193,9 @@ export function acceptDraftHandover(mine) {
 }
 
 export function buildDailyInsights(mine) {
-  const queued = (mine.tippers || []).filter(t => t.status === 'queued').length
+  const queued = (mine.tippers || []).filter(
+    t => t.event === 'arrive_empty' || t.event === 'held_gate' || t.event === 'loading' || t.status === 'queued'
+  ).length
   const x17 = (mine.plants || []).find(p => p.id === 'X17')
   const conc60 = (mine.stockpiles || []).find(s => s.id === 'sp-conc-60')
   const romChrome = (mine.stockpiles || []).find(s => s.id === 'sp-rom-chrome')

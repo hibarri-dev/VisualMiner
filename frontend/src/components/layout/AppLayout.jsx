@@ -9,10 +9,11 @@ import AddPersonModal from '../modals/AddPersonModal'
 import RegisterSiteModal from '../modals/RegisterSiteModal'
 import { useMineData } from '../../context/useMineData'
 import { MANAGER_SITE_ID } from '../../data/managerDesk'
+import { ROLE_LANDING } from '../../config/navigationConfig'
 
 export default function AppLayout({ children }) {
   const { selectSearchResult, setSelectedSiteId } = useMineData()
-  const [activeTab, setActiveTab] = useState('production')
+  const [activeTab, setActiveTab] = useState('portfolio')
   const [activeSubTab, setActiveSubTab] = useState('mines-models')
   const [currentRole, setCurrentRole] = useState('executive')
   const [searchQuery, setSearchQuery] = useState('')
@@ -22,12 +23,10 @@ export default function AppLayout({ children }) {
 
   const handleSelectRole = role => {
     setCurrentRole(role)
-    if (role === 'mine_manager') {
-      setActiveTab('manager-desk')
-      if (setSelectedSiteId) setSelectedSiteId(MANAGER_SITE_ID)
-    } else if (activeTab === 'manager-desk') {
-      setActiveTab('production')
-    }
+    const landing = ROLE_LANDING[role] || { tab: 'production', sub: null }
+    setActiveTab(landing.tab)
+    if (landing.sub) setActiveSubTab(landing.sub)
+    if (role === 'mine_manager' && setSelectedSiteId) setSelectedSiteId(MANAGER_SITE_ID)
   }
 
   const handleOpenModal = modalId => {
@@ -93,6 +92,7 @@ export default function AppLayout({ children }) {
 
           {/* AI Report Panel (Static Rail on >=xl, Slide Drawer on <xl) */}
           <AiReportPanel
+            currentRole={currentRole}
             activeTab={activeTab}
             isOpenDrawer={isAiDrawerOpen}
             onCloseDrawer={() => setIsAiDrawerOpen(false)}
