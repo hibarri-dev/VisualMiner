@@ -8,7 +8,8 @@ export const REPORT_TYPES = [
   { id: 'sops', name: 'SOPs', desc: 'Standard Operating Procedures & checklists' },
   { id: 'permits', name: 'Permits', desc: 'Environmental & blasting statutory approvals' },
   { id: 'environmental', name: 'Environmental Reports', desc: 'Dust, water runoff & noise sensors' },
-  { id: 'contractor', name: 'Contractor Reports', desc: 'Third-party haulage & drilling logs' }
+  { id: 'contractor', name: 'Contractor Reports', desc: 'Third-party haulage & drilling logs' },
+  { id: 'daily_production', name: 'Daily production', desc: 'Mine manager shift submit for executives' }
 ]
 
 export function createSiteReports() {

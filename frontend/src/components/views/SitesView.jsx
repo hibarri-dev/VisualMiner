@@ -74,16 +74,22 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
   return (
     <ViewFrame
       eyebrow="Asset Portfolio & Operations"
-      title="Managed Mining & Processing Sites"
-      description="Supports full open pits, standalone wash/crushing plants with no mine, exploration prospects, and customer-owned port terminals."
+      title={currentRole === 'mine_manager' ? 'Your assigned pit' : 'Managed Mining & Processing Sites'}
+      description={
+        currentRole === 'mine_manager'
+          ? 'Kolar North only. Executives see the rest of the portfolio when they switch role.'
+          : 'Supports full open pits, standalone wash/crushing plants with no mine, exploration prospects, and customer-owned port terminals.'
+      }
       actions={
-        <button
-          onClick={() => onOpenModal && onOpenModal('register-site')}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Register New Site</span>
-        </button>
+        currentRole === 'mine_manager' ? null : (
+          <button
+            onClick={() => onOpenModal && onOpenModal('register-site')}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Register New Site</span>
+          </button>
+        )
       }
     >
       {/* Stage Filters Bar */}

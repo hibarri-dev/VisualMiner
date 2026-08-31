@@ -9,7 +9,10 @@ import {
   ingestSiteReport,
   liveStats,
   tickMine,
-  buildSearchIndex
+  buildSearchIndex,
+  sendNote,
+  submitDailyReport,
+  markNotificationsRead
 } from '../data'
 import { applyLiveCoal, fetchLiveCoalPrices } from '../data/coalPrices'
 
@@ -79,6 +82,22 @@ export function MineDataProvider({ children }) {
     setMine(prev => acceptDraftHandover(prev))
   }, [])
 
+  const postNote = useCallback(payload => {
+    const result = sendNote(mineRef.current, payload)
+    setMine(result.mine)
+    return result.note
+  }, [])
+
+  const postDailyReport = useCallback(payload => {
+    const result = submitDailyReport(mineRef.current, payload)
+    setMine(result.mine)
+    return result
+  }, [])
+
+  const readNotifications = useCallback((role = 'executive') => {
+    setMine(prev => markNotificationsRead(prev, role))
+  }, [])
+
   const selectSearchResult = useCallback(result => {
     if (result.type === 'machine') setSelectedMachineId(result.id)
     if (result.type === 'worker') setSelectedPersonId(result.id)
@@ -108,6 +127,9 @@ export function MineDataProvider({ children }) {
       addPerson,
       addSite,
       acceptHandover,
+      postNote,
+      postDailyReport,
+      readNotifications,
       selectSearchResult
     }),
     [
@@ -123,6 +145,9 @@ export function MineDataProvider({ children }) {
       addPerson,
       addSite,
       acceptHandover,
+      postNote,
+      postDailyReport,
+      readNotifications,
       selectSearchResult
     ]
   )

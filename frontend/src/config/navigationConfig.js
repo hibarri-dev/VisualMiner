@@ -31,7 +31,7 @@ import {
 export const ROLES = [
   { id: 'executive', label: 'Executive', description: 'Full executive oversight, financial & operational KPIs' },
   { id: 'admin', label: 'Admin', description: 'System configuration, API integrations & access control' },
-  { id: 'mine_manager', label: 'Mine Manager', description: 'Pit operations, fleet dispatch & shift planning' },
+  { id: 'mine_manager', label: 'Mine Manager', description: 'One pit — daily production, notes to executives' },
   { id: 'worker', label: 'Worker', description: 'Personal tag telemetry, tasks & safety broadcasts' }
 ]
 
@@ -220,10 +220,37 @@ export const NAVIGATION_ITEMS = [
   }
 ]
 
-export function getNavigationItems(stats) {
-  if (!stats) return NAVIGATION_ITEMS
+const MANAGER_DESK_ITEM = {
+  id: 'manager-desk',
+  label: 'Shift desk',
+  badge: 'Today',
+  description: 'One pit, daily production report, notes to executives'
+}
 
-  return NAVIGATION_ITEMS.map(item => {
+const MANAGER_NAV_IDS = [
+  'manager-desk',
+  'maps',
+  'sites',
+  'cycle',
+  'production',
+  'processing',
+  'shipments',
+  'machines',
+  'humans',
+  'schedule',
+  'site-reports',
+  'messaging'
+]
+
+export function getNavigationItems(stats, role) {
+  const base =
+    role === 'mine_manager'
+      ? [MANAGER_DESK_ITEM, ...NAVIGATION_ITEMS.filter(item => MANAGER_NAV_IDS.includes(item.id))]
+      : NAVIGATION_ITEMS
+
+  if (!stats) return base
+
+  return base.map(item => {
     if (item.id === 'sites') {
       const sites = stats.sites || []
       return {
@@ -236,7 +263,8 @@ export function getNavigationItems(stats) {
           stageLabel: site.stageLabel,
           typeLabel: site.typeLabel,
           badge: site.stageLabel
-        }))
+        })),
+        quickAction: role === 'mine_manager' ? undefined : item.quickAction
       }
     }
     if (item.id === 'processing') {
@@ -259,7 +287,6 @@ export function getNavigationItems(stats) {
     if (item.id === 'machines') {
       return {
         ...item,
-        badge: `${stats.machinesActive} Active`,
         children: item.children.map(child => {
           if (child.id === 'mach-fleet') return { ...child, label: `All Yellow Fleet (${stats.machinesTotal})` }
           if (child.id === 'mach-haulers') return { ...child, label: `Dump Trucks (${stats.haulers})` }
@@ -269,7 +296,8 @@ export function getNavigationItems(stats) {
           if (child.id === 'mach-drills') return { ...child, label: `Drill Rigs (${stats.drills})` }
           if (child.id === 'mach-support') return { ...child, label: `Water & Fuel (${stats.support})` }
           return child
-        })
+        }),
+        badge: `${stats.machinesActive} Active`
       }
     }
     if (item.id === 'humans') {
@@ -286,9 +314,13 @@ export function getNavigationItems(stats) {
       }
     }
     if (item.id === 'messaging') {
+      const unread =
+        role === 'mine_manager'
+          ? stats.unreadManagerInbox || 0
+          : stats.unreadMessages
       return {
         ...item,
-        badge: stats.unreadMessages > 0 ? `${stats.unreadMessages} new` : ''
+        badge: unread > 0 ? `${unread} new` : ''
       }
     }
     return item

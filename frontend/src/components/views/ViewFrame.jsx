@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function ViewFrame({ eyebrow, title, description, actions, children }) {
+export default function ViewFrame({ eyebrow, title, description, actions, children, scrollPage = false }) {
   return (
     <div className="flex-1 flex flex-col gap-3 sm:gap-4 p-3 sm:p-5 overflow-y-auto bg-[#0d0e12] min-w-0">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 sm:gap-4 shrink-0">
