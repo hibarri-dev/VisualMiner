@@ -11,13 +11,14 @@ export default function AiReportPanel({
   isOpenDrawer,
   onCloseDrawer,
   activeTab,
+  activeSubTab,
   currentRole = 'executive'
 }) {
   const { mine, readInbox } = useMineData()
   const [inboxOpen, setInboxOpen] = useState(false)
   const { production } = mine
   const trendSign = production.weekTrendPercent > 0 ? 'Up' : 'Down'
-  const geology = activeTab === 'mines'
+  const geology = activeTab === 'sites' && activeSubTab === 'sitetool-orebody'
   const geo = geology ? explorationNarrative() : null
   const metresSeries = geology
     ? Object.values(drillMeta.metresByYear || { 2021: 0, 2022: 0, 2023: 0, 2024: 1 })

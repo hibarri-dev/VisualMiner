@@ -14,7 +14,7 @@ import { ROLE_LANDING } from '../../config/navigationConfig'
 export default function AppLayout({ children }) {
   const { selectSearchResult, setSelectedSiteId } = useMineData()
   const [activeTab, setActiveTab] = useState('portfolio')
-  const [activeSubTab, setActiveSubTab] = useState('mines-models')
+  const [activeSubTab, setActiveSubTab] = useState(null)
   const [currentRole, setCurrentRole] = useState('executive')
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
@@ -38,6 +38,12 @@ export default function AppLayout({ children }) {
     setActiveTab(tab)
     if (opts.subTab) setActiveSubTab(opts.subTab)
     if ('asset' in opts) setFocusedAsset(opts.asset)
+  }
+
+  /** A top-level click lands on the section root, not whatever sub-view was last open. */
+  const handleSelectTab = tab => {
+    setActiveTab(tab)
+    setActiveSubTab(null)
   }
 
   const handleOpenModal = modalId => {
@@ -82,7 +88,7 @@ export default function AppLayout({ children }) {
       {/* 1. Responsive Sidebar (Static on Desktop, Overlay Drawer on Mobile) */}
       <Sidebar
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         activeSubTab={activeSubTab}
         onSelectSubTab={setActiveSubTab}
         onOpenModal={handleOpenModal}

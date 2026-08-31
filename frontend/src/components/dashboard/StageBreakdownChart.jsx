@@ -27,10 +27,10 @@ export default function StageBreakdownChart({
           {items.map(item => (
             <div
               key={item.id}
-              className="flex-1 flex flex-col items-center justify-end h-full max-w-[130px]"
+              className="flex-1 min-w-0 flex flex-col items-center justify-end h-full max-w-[130px]"
             >
               {/* Category Label Above Bar (Matching Screenshot typography) */}
-              <div className="mb-3 text-center">
+              <div className="mb-3 text-center w-full min-w-0">
                 <span className="text-xs sm:text-sm font-normal text-slate-200 tracking-wide block truncate">
                   {item.label}
                 </span>

@@ -159,7 +159,7 @@ export default function ManagerExecNotes({
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white text-xs">{note.title}</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${
                     note.role === 'mine_manager'
                       ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                       : 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
