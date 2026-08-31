@@ -8,9 +8,10 @@ import AddMachineModal from '../modals/AddMachineModal'
 import AddPersonModal from '../modals/AddPersonModal'
 import RegisterSiteModal from '../modals/RegisterSiteModal'
 import { useMineData } from '../../context/useMineData'
+import { MANAGER_SITE_ID } from '../../data/managerDesk'
 
 export default function AppLayout({ children }) {
-  const { selectSearchResult } = useMineData()
+  const { selectSearchResult, setSelectedSiteId } = useMineData()
   const [activeTab, setActiveTab] = useState('production')
   const [activeSubTab, setActiveSubTab] = useState('mines-models')
   const [currentRole, setCurrentRole] = useState('executive')
@@ -18,6 +19,16 @@ export default function AppLayout({ children }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false)
   const [activeModal, setActiveModal] = useState(null)
+
+  const handleSelectRole = role => {
+    setCurrentRole(role)
+    if (role === 'mine_manager') {
+      setActiveTab('manager-desk')
+      if (setSelectedSiteId) setSelectedSiteId(MANAGER_SITE_ID)
+    } else if (activeTab === 'manager-desk') {
+      setActiveTab('production')
+    }
+  }
 
   const handleOpenModal = modalId => {
     setActiveModal(modalId)
@@ -60,6 +71,7 @@ export default function AppLayout({ children }) {
         onOpenModal={handleOpenModal}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        currentRole={currentRole}
       />
 
       {/* 2. Main Center Shell */}
@@ -67,7 +79,7 @@ export default function AppLayout({ children }) {
         {/* Responsive Top Header */}
         <TopHeader
           currentRole={currentRole}
-          onSelectRole={setCurrentRole}
+          onSelectRole={handleSelectRole}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onSelectSearchResult={handleSearchResultClick}

@@ -1,4 +1,10 @@
 import { SITE, SITES_CATALOG, GEOFENCES, PORTS, WORKER_PERSONA } from './catalog'
+import {
+  createDailyReports,
+  createNotes,
+  createNotifications,
+  filterMineForManager
+} from './managerDesk'
 import { createMachines, MACHINE_TYPES, MACHINE_ZONES, TRACK_PATHS, stepAlongPath, pathSpeed, cycleForWaypoint } from './machines'
 import { createPersonnel } from './personnel'
 import {
@@ -76,6 +82,9 @@ export function createMineState() {
     communities: createCommunities(),
     surveyTargets: createSurveyTargets(),
     cycleCapture: createCycleCapture(),
+    notes: createNotes(),
+    dailyReports: createDailyReports(),
+    notifications: createNotifications(),
     insights: [],
     lastTickAt: Date.now()
   }
@@ -551,6 +560,10 @@ export function liveStats(mine) {
   const support = mine.machines.filter(m => MACHINE_TYPES[m.type]?.group === 'support').length
   const queued = mine.tippers.filter(t => t.status === 'queued').length
   const unread = mine.messages.filter(m => m.unread).length
+  const unreadNotes = (mine.notes || []).filter(n => n.unread).length
+  const unreadExecutiveNotifications = (mine.notifications || []).filter(
+    n => n.forRole === 'executive' && n.unread
+  ).length
   const x17 = mine.plants.find(p => p.id === 'X17')
 
   return {
@@ -569,6 +582,10 @@ export function liveStats(mine) {
     safety,
     queuedTippers: queued,
     unreadMessages: unread,
+    unreadNotes,
+    unreadManagerInbox: (mine.notes || []).filter(n => n.toRole === 'mine_manager' && n.unread).length,
+    unreadExecutiveNotifications,
+    dailyReportsCount: (mine.dailyReports || []).length,
     extractionTph: mine.production.extractionTph,
     crushingTph: mine.production.crushingTph,
     screeningTph: mine.production.screeningTph,
@@ -582,6 +599,7 @@ export function liveStats(mine) {
 }
 
 export function filterMineForRole(mine, role) {
+  if (role === 'mine_manager') return filterMineForManager(mine)
   if (role !== 'worker') return mine
   const person = mine.personnel.find(p => p.id === WORKER_PERSONA.personId)
   const machine = mine.machines.find(m => m.id === WORKER_PERSONA.machineId)
