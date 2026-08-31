@@ -18,7 +18,7 @@ import {
   FileText,
   MessageSquare
 } from 'lucide-react'
-import { getNavigationItems } from '../../config/navigationConfig'
+import { SITE_GROUPS, getNavigationItems } from '../../config/navigationConfig'
 import { useVisibleMine } from '../../context/useMineData'
 
 export default function Sidebar({
@@ -35,7 +35,6 @@ export default function Sidebar({
   const navigationItems = getNavigationItems(stats, currentRole)
   const [expandedMenus, setExpandedMenus] = useState({
     sites: false,
-    mines: false,
     processing: false,
     'site-reports': false
   })
@@ -108,7 +107,7 @@ export default function Sidebar({
 
                   <div className="flex items-center gap-1.5 shrink-0">
                     {item.badge && !isActive && (
-                      <span className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded bg-[#1e212b] text-slate-400 border border-slate-700/50">
+                      <span className="hidden sm:inline-block text-[9px] px-1.5 py-0.5 rounded bg-[#1e212b] text-slate-400 border border-slate-700/50">
                         {item.badge}
                       </span>
                     )}
@@ -147,11 +146,23 @@ export default function Sidebar({
                       </button>
                     )}
 
-                    {item.children.map(subItem => {
+                    {item.children.map((subItem, i) => {
                       const isSubActive = activeSubTab === subItem.id
+                      // Header whenever the group changes, so a mine still reads as a
+                      // mine now that plants, ports and tools share the same list.
+                      const prevGroup = i > 0 ? item.children[i - 1].group : null
+                      const groupLabel =
+                        subItem.group && subItem.group !== prevGroup
+                          ? (SITE_GROUPS.find(g => g.id === subItem.group) || {}).label
+                          : null
                       return (
+                        <React.Fragment key={subItem.id}>
+                        {groupLabel ? (
+                          <div className="px-2.5 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-600">
+                            {groupLabel}
+                          </div>
+                        ) : null}
                         <div
-                          key={subItem.id}
                           onClick={() => handleSubItemClick(item.id, subItem.id)}
                           className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[11px] font-medium cursor-pointer transition ${
                             isSubActive
@@ -161,11 +172,12 @@ export default function Sidebar({
                         >
                           <span className="truncate">{subItem.label}</span>
                           {subItem.badge && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#1e212b] text-slate-300 border border-slate-700/50 shrink-0 ml-1">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#1e212b] text-slate-300 border border-slate-700/50 shrink-0 ml-1">
                               {subItem.badge}
                             </span>
                           )}
                         </div>
+                        </React.Fragment>
                       )
                     })}
                   </div>

@@ -81,7 +81,7 @@ export default function WeighbridgeLogistics({ onInspectTruck }) {
             <Truck className="w-4 h-4 text-amber-400" />
             <span>Road Tippers & Weighbridge</span>
             {fraudCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
+              <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
                 {fraudCount} Fraud Flags
               </span>
             )}
@@ -142,7 +142,7 @@ export default function WeighbridgeLogistics({ onInspectTruck }) {
           {/* Filters Bar */}
           <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#121318] border border-[#20232d] p-2.5 rounded-xl text-xs">
             {/* Status Filter */}
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <span className="text-slate-400 mr-1 flex items-center gap-1">
                 <Filter className="w-3 h-3" /> Status:
               </span>
@@ -240,7 +240,7 @@ export default function WeighbridgeLogistics({ onInspectTruck }) {
                         <div className="font-semibold text-white font-mono flex items-center gap-1.5">
                           {truck.vehicleId}
                           {isFraud && (
-                            <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 text-[10px] border border-rose-500/30 font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[10px] border border-rose-500/30 font-bold">
                               HELD
                             </span>
                           )}

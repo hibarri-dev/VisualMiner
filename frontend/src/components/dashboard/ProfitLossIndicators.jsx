@@ -75,7 +75,7 @@ export default function ProfitLossIndicators({ activeStage = 'extraction', pnl }
         </p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
         <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-950/20 via-[#161820] to-[#161820] border border-emerald-500/30 space-y-2.5">
           <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
             <TrendingUp className="w-4 h-4" />
@@ -87,10 +87,10 @@ export default function ProfitLossIndicators({ activeStage = 'extraction', pnl }
                 key={item.label}
                 className="p-2.5 rounded-lg bg-[#111217] border border-[#232634] flex items-start justify-between gap-3 text-xs"
               >
-                <div className="space-y-0.5">
-                  <div className="font-semibold text-slate-100 flex items-center gap-1.5">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="font-semibold text-slate-100 flex items-center gap-1.5 min-w-0">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>{item.label}</span>
+                    <span className="min-w-0 break-words">{item.label}</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed pl-5">{item.note}</p>
                 </div>
@@ -111,10 +111,10 @@ export default function ProfitLossIndicators({ activeStage = 'extraction', pnl }
                 key={item.label}
                 className="p-2.5 rounded-lg bg-[#111217] border border-[#232634] flex items-start justify-between gap-3 text-xs"
               >
-                <div className="space-y-0.5">
-                  <div className="font-semibold text-rose-200 flex items-center gap-1.5">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="font-semibold text-rose-200 flex items-center gap-1.5 min-w-0">
                     <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                    <span>{item.label}</span>
+                    <span className="min-w-0 break-words">{item.label}</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed pl-5">{item.note}</p>
                 </div>

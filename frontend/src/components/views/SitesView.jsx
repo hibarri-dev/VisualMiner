@@ -149,20 +149,23 @@ export default function SitesView({ currentRole, onOpenModal, activeSubTab }) {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-3">
+                    {/* min-w-0 at every level of the flex chain: without it a long site
+                        name ("Queensway Gold (New Found Gold)") cannot shrink and spills
+                        the card ~44px past its container instead of ellipsing. */}
+                    <div className="flex items-start gap-3 min-w-0">
                       <div className="p-2 rounded-lg bg-[#272b3a] border border-[#373d52] shrink-0 mt-0.5">
                         {getTypeIcon(site.type)}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-sm text-white tracking-tight">{site.name}</h4>
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h4 className="font-semibold text-sm text-white tracking-tight truncate">{site.name}</h4>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono shrink-0">
                             {site.code}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
-                          <MapPin className="w-3.5 h-3.5 text-slate-500" />
-                          <span>{site.location}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5 min-w-0">
+                          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">{site.location}</span>
                         </div>
                       </div>
                     </div>

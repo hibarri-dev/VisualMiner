@@ -24,16 +24,15 @@ export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenM
     return <PortfolioMapView onNavigate={onNavigate} />
   }
 
+  // Sites covers mines too — an open pit is a site, so the ore-body model, data feeds
+  // and geofences are sub-views of Sites rather than a parallel "Mines" section.
   if (activeTab === 'sites') {
-    return <SitesView currentRole={currentRole} onOpenModal={onOpenModal} activeSubTab={activeSubTab} />
-  }
-
-  if (activeTab === 'mines') {
-    if (activeSubTab === 'mines-feeds' || String(activeSubTab).startsWith('feed-')) {
+    if (activeSubTab === 'sitetool-feeds' || String(activeSubTab).startsWith('feed-')) {
       return <FeedsView currentRole={currentRole} />
     }
-    if (activeSubTab === 'mines-geofence') return <GeofenceView currentRole={currentRole} />
-    return <OreBodyView />
+    if (activeSubTab === 'sitetool-geofence') return <GeofenceView currentRole={currentRole} />
+    if (activeSubTab === 'sitetool-orebody') return <OreBodyView />
+    return <SitesView currentRole={currentRole} onOpenModal={onOpenModal} activeSubTab={activeSubTab} />
   }
 
   if (activeTab === 'machines') {
