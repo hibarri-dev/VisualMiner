@@ -648,6 +648,46 @@ export const VESSEL_SEED = [
   { id: 'vsl-conakry', name: 'MV Nimba', flag: 'Malta', portId: 'port-conakry', lon: -14.4, lat: 9.4, cargo: 'Iron ore', capacityTons: 58000, loadedTons: 0, status: 'waiting_cargo', laycanDays: 10, laycanUsed: 7, demurrageUsdPerDay: 18000, note: 'Waiting on a rail corridor that is not yet at design rate.' }
 ]
 
+/**
+ * Individual trucks drawn on the corridors.
+ *
+ * A convoy record is a commercial unit ("90 tippers booked against SierraYT65"); it is
+ * not something you can watch move. These are the icons that actually drive: a handful
+ * per corridor, enough to read as traffic without turning the road into a solid line.
+ *
+ * Half run laden pit -> port and half run empty port -> pit, because that round trip is
+ * what the weighbridge story hangs off — a tipper is weighed empty at the gate on the
+ * way in and laden on the way out, and the difference is the fraud check.
+ */
+const TRUCKS_PER_CORRIDOR = 6
+
+export function buildTruckFleet() {
+  const fleet = []
+  ROAD_CORRIDORS.forEach((corridor, ci) => {
+    const convoy = CONVOY_SEED.find(c => c.corridorId === corridor.id)
+    for (let i = 0; i < TRUCKS_PER_CORRIDOR; i += 1) {
+      const laden = i % 2 === 0
+      fleet.push({
+        id: `${corridor.id}-t${i}`,
+        corridorId: corridor.id,
+        convoyId: convoy ? convoy.id : null,
+        label: convoy ? convoy.label : corridor.id,
+        laden,
+        tonsPerTruck: convoy ? convoy.tonsPerTruck : 34,
+        // Stagger the start positions so trucks are spread along the road rather than
+        // leaving the gate in a single clump.
+        phase: (i / TRUCKS_PER_CORRIDOR + ci * 0.17) % 1,
+        // A full corridor traverse lands around 70-100s: visible movement at a glance,
+        // without trucks skating across a continent.
+        speed: 0.0102 + (ci % 3) * 0.0016
+      })
+    }
+  })
+  return fleet
+}
+
+export const TRUCK_FLEET = buildTruckFleet()
+
 export const MAP_LAYERS = [
   { id: 'mines', label: 'Mines', color: '#c026d3' },
   { id: 'plants', label: 'Processing', color: '#fb923c' },

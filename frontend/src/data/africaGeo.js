@@ -94,3 +94,16 @@ export function pointAlong(points, t) {
   }
   return points[points.length - 1]
 }
+
+/**
+ * Projected heading in radians at fraction `t` along a lon/lat polyline, measured in
+ * SVG space (y grows downward). Used to point a vehicle glyph along its route.
+ */
+export function headingAlong(points, t) {
+  const eps = 0.004
+  const [alon, alat] = pointAlong(points, Math.max(0, t - eps))
+  const [blon, blat] = pointAlong(points, Math.min(1, t + eps))
+  const [ax, ay] = project(alon, alat)
+  const [bx, by] = project(blon, blat)
+  return Math.atan2(by - ay, bx - ax)
+}
