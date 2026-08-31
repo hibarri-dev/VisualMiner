@@ -1,5 +1,6 @@
 import React from 'react'
 import MapsView from './MapsView'
+import PortfolioMapView from './PortfolioMapView'
 import OreBodyView from './OreBodyView'
 import SitesView from './SitesView'
 import FleetView from './FleetView'
@@ -17,6 +18,10 @@ export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenM
 
   if (activeTab === 'maps') {
     return <MapsView currentRole={currentRole} />
+  }
+
+  if (activeTab === 'portfolio') {
+    return <PortfolioMapView />
   }
 
   if (activeTab === 'sites') {
