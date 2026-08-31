@@ -21,6 +21,7 @@ import {
   createSurveyTargets,
   buildDailyInsights
 } from './cycle'
+import { createCycleCapture } from './cycleCapture'
 import { clamp, mulberry32, randInt, uniqueCode } from './rng'
 
 const REPORT_FEED_SYNC = {
@@ -74,6 +75,7 @@ export function createMineState() {
     weighbridge: createWeighbridge(),
     communities: createCommunities(),
     surveyTargets: createSurveyTargets(),
+    cycleCapture: createCycleCapture(),
     insights: [],
     lastTickAt: Date.now()
   }
@@ -506,7 +508,7 @@ export function buildSearchIndex(mine) {
     id: t.id,
     siteId: t.siteId,
     title: t.name,
-    subtitle: t.note,
+        subtitle: t.densityIndex != null ? `Density ${t.densityIndex} · ${t.nextAction || t.note}` : t.note,
     tag: t.status
   }))
 

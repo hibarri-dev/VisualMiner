@@ -5,6 +5,7 @@ import SitesView from './SitesView'
 import FleetView from './FleetView'
 import HumansView from './HumansView'
 import OpsView from './OpsView'
+import CycleView from './CycleView'
 import SiteReportsView from './SiteReportsView'
 import FeedsView, { GeofenceView, ScheduleView, MessagesView, PortsView } from './CatalogViews'
 
@@ -31,6 +32,10 @@ export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenM
 
   if (activeTab === 'humans') {
     return <HumansView activeSubTab={activeSubTab} currentRole={currentRole} onOpenModal={onOpenModal} />
+  }
+
+  if (activeTab === 'cycle') {
+    return <CycleView currentRole={currentRole} />
   }
 
   if (activeTab === 'production' || activeTab === 'processing' || activeTab === 'shipments' || activeTab === 'collections') {
