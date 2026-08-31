@@ -12,6 +12,7 @@ import ProfitLossIndicators from '../dashboard/ProfitLossIndicators'
 import ManagerExecNotes from '../dashboard/ManagerExecNotes'
 import DailyProductionReportModal from '../modals/DailyProductionReportModal'
 import { getStageData } from '../../data/stageDummyData'
+import { buildStagePnl, formatUsdShift } from '../../data/stagePnl'
 import { MANAGER_SITE_ID } from '../../data/managerDesk'
 import {
   Flame,
@@ -245,6 +246,8 @@ export default function OpsView({ activeTab, currentRole }) {
     return getStageData(selectedMine, activeTimeRange, activeStage)
   }, [selectedMine, activeTimeRange, activeStage])
 
+  const pnl = useMemo(() => buildStagePnl(mine, activeTimeRange), [mine, activeTimeRange])
+
   const handleDailyReportSubmitted = report => {
     setNotificationBanner({
       title: `Daily Production Report Received (${report.site} · ${report.shift})`,
@@ -253,7 +256,7 @@ export default function OpsView({ activeTab, currentRole }) {
   }
 
   const titles = {
-    production: ['Production Stage', 'Executive mining cycle overview, stage yield & bottleneck telemetry.'],
+    production: ['Production Stage', 'Where money is made or lost this shift — pit vs plant vs gate.'],
     processing: ['Processing', 'ROM → named concentrate piles (42 / 50 / 60%). Plant yield is the bottleneck, not the pit.'],
     shipments: ['Shipments & Logistics Hub', 'Gate queue, weighbridge fraud detection & Jindal captive rail sidings.'],
     collections: ['Collections', 'Named stockpiles by purity — including chrome concentrate and anthracite sold raw.']
@@ -273,10 +276,28 @@ export default function OpsView({ activeTab, currentRole }) {
         showMineSelect={currentRole !== 'mine_manager'}
       />
 
+      {pnl.worst && (
+        <div
+          className={`shrink-0 rounded-xl border px-4 py-2.5 text-xs ${
+            pnl.worst.verdict === 'losing'
+              ? 'border-rose-500/30 bg-rose-500/10 text-rose-100'
+              : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+          }`}
+        >
+          <span className="font-semibold">{pnl.worst.label}</span>
+          {' is the decision. Net '}
+          <span className="font-mono">{pnl.worst.metric}</span>
+          {' this period vs extraction '}
+          <span className="font-mono">{pnl.stages.extraction.metric}</span>
+          {pnl.totalNet != null ? ` · site net ${formatUsdShift(pnl.totalNet)}` : ''}.
+        </div>
+      )}
+
       {/* 2. Mining Cycle Stage Cards (Preparation, Extraction, Processing, Haulage, Shipping) */}
       <MiningStageCards
         activeStage={activeStage}
         onSelectStage={setActiveStage}
+        stageMetrics={pnl.metrics}
       />
 
       {/* 3. Stage Breakdown Chart Container with Gradient Border */}
@@ -294,7 +315,7 @@ export default function OpsView({ activeTab, currentRole }) {
       />
 
       {/* 5. Economic Impact Analysis: Money-Making vs Money-Losing Bottlenecks */}
-      <ProfitLossIndicators activeStage={activeStage} />
+      <ProfitLossIndicators activeStage={activeStage} pnl={pnl} />
 
       {/* 6. Gate & Weighbridge Logistics + Jindal Captive Rail Section */}
       <WeighbridgeLogistics />
