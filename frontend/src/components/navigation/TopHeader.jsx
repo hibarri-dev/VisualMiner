@@ -18,6 +18,7 @@ import {
   Users
 } from 'lucide-react'
 import { ROLES } from '../../config/navigationConfig'
+import { ROLE_PERSONAS } from '../../data/managerDesk'
 import { useVisibleMine } from '../../context/useMineData'
 
 export default function TopHeader({
@@ -34,6 +35,7 @@ export default function TopHeader({
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchInputRef = useRef(null)
   const { searchIndex } = useVisibleMine(currentRole)
+  const persona = ROLE_PERSONAS[currentRole] || ROLE_PERSONAS.executive
 
   useEffect(() => {
     const handleKeyDown = e => {
@@ -198,11 +200,13 @@ export default function TopHeader({
             className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer hover:opacity-90 transition group"
           >
             <span className="hidden sm:inline text-slate-400 text-xs transition group-hover:text-slate-200">▾</span>
-            <span className="hidden sm:inline text-[13px] font-medium text-slate-200 tracking-tight">Oliver</span>
+            <span className="hidden sm:inline text-[13px] font-medium text-slate-200 tracking-tight">
+              {persona.name.split(' ')[0]}
+            </span>
             <div className="relative">
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces"
-                alt="Oliver"
+                alt={persona.name}
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-[#2e3140] shadow-sm"
               />
             </div>
@@ -211,8 +215,8 @@ export default function TopHeader({
           {isProfileDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 sm:w-52 bg-[#181a21] border border-[#2a2d39] rounded-xl shadow-2xl p-1.5 z-50 text-xs">
               <div className="px-3 py-2 border-b border-[#232635]">
-                <div className="font-semibold text-white">Oliver Vance</div>
-                <div className="text-[10px] text-slate-400">Chief Mining Engineer</div>
+                <div className="font-semibold text-white">{persona.name}</div>
+                <div className="text-[10px] text-slate-400">{persona.title}</div>
               </div>
               <div className="py-1 space-y-0.5">
                 <button className="w-full text-left px-3 py-1.5 rounded-md hover:bg-[#222530] text-slate-300">

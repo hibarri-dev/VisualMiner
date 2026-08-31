@@ -7,9 +7,14 @@ import HumansView from './HumansView'
 import OpsView from './OpsView'
 import CycleView from './CycleView'
 import SiteReportsView from './SiteReportsView'
+import ManagerDeskView from './ManagerDeskView'
 import FeedsView, { GeofenceView, ScheduleView, MessagesView, PortsView } from './CatalogViews'
 
 export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenModal }) {
+  if (activeTab === 'manager-desk') {
+    return <ManagerDeskView />
+  }
+
   if (activeTab === 'maps') {
     return <MapsView currentRole={currentRole} />
   }

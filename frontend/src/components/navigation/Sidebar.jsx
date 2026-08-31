@@ -19,7 +19,7 @@ import {
   MessageSquare
 } from 'lucide-react'
 import { getNavigationItems } from '../../config/navigationConfig'
-import { useMineData } from '../../context/useMineData'
+import { useVisibleMine } from '../../context/useMineData'
 
 export default function Sidebar({
   activeTab,
@@ -28,10 +28,11 @@ export default function Sidebar({
   onSelectSubTab,
   onOpenModal,
   isOpenMobile,
-  onCloseMobile
+  onCloseMobile,
+  currentRole
 }) {
-  const { stats } = useMineData()
-  const navigationItems = getNavigationItems(stats)
+  const { stats } = useVisibleMine(currentRole)
+  const navigationItems = getNavigationItems(stats, currentRole)
   const [expandedMenus, setExpandedMenus] = useState({
     sites: false,
     mines: false,

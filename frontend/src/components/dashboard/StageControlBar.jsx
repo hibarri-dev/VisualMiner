@@ -29,7 +29,8 @@ export default function StageControlBar({
   selectedMine = 'kulilia',
   onSelectMine,
   activeMode = 'production',
-  onSelectMode
+  onSelectMode,
+  showMineSelect = true
 }) {
   const [isMineOpen, setIsMineOpen] = useState(false)
   const [isModeOpen, setIsModeOpen] = useState(false)
@@ -62,7 +63,7 @@ export default function StageControlBar({
 
       {/* 2. Mine Selector & Stage Mode Dropdowns (Light Grey Buttons from Mockup) */}
       <div className="flex items-center gap-3">
-        {/* Mine Dropdown */}
+        {showMineSelect ? (
         <div className="relative">
           <button
             type="button"
@@ -103,6 +104,11 @@ export default function StageControlBar({
             </div>
           )}
         </div>
+        ) : (
+          <div className="flex items-center justify-center px-5 sm:px-6 py-2 rounded-xl bg-[#d1d5db] text-[#121316] text-xs sm:text-sm font-normal shadow-xs">
+            {currentMineObj.name}
+          </div>
+        )}
 
         {/* Stage Mode Dropdown */}
         <div className="relative">
