@@ -24,7 +24,8 @@ import {
   FileCheck,
   Award,
   Scroll,
-  FolderGit2
+  FolderGit2,
+  Globe2
 } from 'lucide-react'
 
 export const ROLES = [
@@ -41,6 +42,13 @@ export const NAVIGATION_ITEMS = [
     icon: Map,
     badge: 'Live 3D',
     description: '3D spatial mining site overview & contour elevation'
+  },
+  {
+    id: 'portfolio',
+    label: 'Portfolio Map',
+    icon: Globe2,
+    badge: '8 countries',
+    description: 'Every mine, plant, rail siding, convoy, port and vessel across the group on one map'
   },
   {
     id: 'sites',
