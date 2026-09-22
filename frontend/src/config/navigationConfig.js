@@ -114,6 +114,20 @@ export const NAVIGATION_ITEMS = [
     description: 'Every mine, plant, rail siding, convoy, port and vessel across the group on one map'
   },
   {
+    id: 'shipping',
+    label: 'Shipping & Demurrage',
+    icon: Anchor,
+    badge: 'Demurrage AI',
+    description: 'Pit-to-port logistics, Incoterm contracts, laycan timers & vessel berth slot tracking'
+  },
+  {
+    id: 'mine-reports',
+    label: 'Mine Shift Reports',
+    icon: FileText,
+    badge: 'Shift Log',
+    description: 'Standard shift reporting template submitted by mine managers to executive management'
+  },
+  {
     id: 'sites',
     label: 'Sites',
     icon: Compass,
