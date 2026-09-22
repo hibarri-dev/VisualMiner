@@ -83,8 +83,16 @@ export default function AppLayout({ children }) {
     focusedAsset
   }
 
+  const [theme, setTheme] = useState('dark')
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
+  }
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0c0d10] font-sans text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className={`flex h-screen w-screen overflow-hidden font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${
+      theme === 'dark' ? 'bg-[#0c0d10] text-slate-100' : 'theme-light bg-slate-50 text-slate-900'
+    }`}>
       {/* 1. Responsive Sidebar (Static on Desktop, Overlay Drawer on Mobile) */}
       <Sidebar
         activeTab={activeTab}
@@ -108,11 +116,15 @@ export default function AppLayout({ children }) {
           onSelectSearchResult={handleSearchResultClick}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
           onToggleAiPanel={() => setIsAiDrawerOpen(prev => !prev)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         {/* Viewport Workspace Slot */}
-        <div className="flex-1 flex min-w-0 overflow-hidden relative">
-          {children ? children(viewportProps) : <Viewport {...viewportProps} />}
+        <div className="flex-1 flex min-w-0 overflow-y-auto relative">
+          <div className="flex-1 min-w-0 h-full overflow-y-auto">
+            {children ? children(viewportProps) : <Viewport {...viewportProps} />}
+          </div>
 
           {/* AI Report Panel (Static Rail on >=xl, Slide Drawer on <xl) */}
           <AiReportPanel
