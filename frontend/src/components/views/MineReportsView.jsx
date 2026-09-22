@@ -184,7 +184,7 @@ export default function MineReportsView() {
               </div>
 
               {/* Tonnage Summary Grid */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                 <div className="p-2.5 bg-[#171924] rounded-xl border border-[#242738]">
                   <span className="text-[10px] text-slate-400 font-bold uppercase">Tons Extracted</span>
                   <div className="font-bold text-slate-100 text-sm mt-0.5">{selectedReport.tonsExtracted.toLocaleString()} T</div>
@@ -198,6 +198,10 @@ export default function MineReportsView() {
                   <div className="font-bold text-indigo-400 text-sm mt-0.5">{selectedReport.tonsInStockpile.toLocaleString()} T</div>
                 </div>
                 <div className="p-2.5 bg-[#171924] rounded-xl border border-[#242738]">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">Tons Loaded</span>
+                  <div className="font-bold text-sky-400 text-sm mt-0.5">{selectedReport.tonsLoadedForTrucking.toLocaleString()} T</div>
+                </div>
+                <div className="p-2.5 bg-[#171924] rounded-xl border border-[#242738] md:col-span-2">
                   <span className="text-[10px] text-slate-400 font-bold uppercase">Tons Dispatched</span>
                   <div className="font-bold text-amber-400 text-sm mt-0.5">{selectedReport.tonsDispatchedOnTrucks.toLocaleString()} T</div>
                 </div>
