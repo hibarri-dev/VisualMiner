@@ -15,7 +15,9 @@ import {
   Compass,
   Calendar,
   FlaskConical,
-  Users
+  Users,
+  Sun,
+  Moon
 } from 'lucide-react'
 import { ROLES } from '../../config/navigationConfig'
 import { ROLE_PERSONAS } from '../../data/managerDesk'
@@ -28,7 +30,9 @@ export default function TopHeader({
   onSearchChange,
   onSelectSearchResult,
   onToggleMobileSidebar,
-  onToggleAiPanel
+  onToggleAiPanel,
+  theme = 'dark',
+  onToggleTheme
 }) {
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
@@ -149,6 +153,26 @@ export default function TopHeader({
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span className="hidden sm:inline">AI Report</span>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        </button>
+
+        {/* Day / Night Dashboard Theme Toggle */}
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'Day' : 'Night'} Mode`}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#181a22] hover:bg-[#20232d] border border-[#262835] text-xs text-slate-300 transition cursor-pointer"
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="hidden md:inline font-medium text-slate-200">Day Mode</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span className="hidden md:inline font-medium text-slate-200">Night Mode</span>
+            </>
+          )}
         </button>
 
         {/* Permission Role Selector */}

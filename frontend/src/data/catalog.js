@@ -242,6 +242,7 @@ export const SITES_CATALOG = [
       assayGrade: 'N/A',
       recoveryRate: 'Dormant',
       waterQualityIndex: 'Piezometers monthly',
+      
       ambientDust: '18 µg/m³',
       lastSurveyDate: '2026-08-01'
     },

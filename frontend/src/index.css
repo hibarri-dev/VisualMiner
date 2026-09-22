@@ -86,3 +86,20 @@
 .animate-slideLeft {
   animation: slideLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Senior Daylight Theme Engine */
+.theme-light {
+  filter: invert(0.92) hue-rotate(180deg);
+  background-color: #ffffff !important;
+}
+
+/* Exclude media, avatars, map canvases, and photos from inversion */
+.theme-light img,
+.theme-light video,
+.theme-light canvas,
+.theme-light [class*="no-invert"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+
+

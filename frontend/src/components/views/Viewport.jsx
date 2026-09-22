@@ -9,9 +9,19 @@ import OpsView from './OpsView'
 import CycleView from './CycleView'
 import SiteReportsView from './SiteReportsView'
 import ManagerDeskView from './ManagerDeskView'
+import ShippingView from './ShippingView'
+import MineReportsView from './MineReportsView'
 import FeedsView, { GeofenceView, ScheduleView, MessagesView, PortsView } from './CatalogViews'
 
 export default function Viewport({ activeTab, activeSubTab, currentRole, onOpenModal, onNavigate, focusedAsset }) {
+  if (activeTab === 'shipping') {
+    return <ShippingView />
+  }
+
+  if (activeTab === 'mine-reports') {
+    return <MineReportsView />
+  }
+
   if (activeTab === 'manager-desk') {
     return <ManagerDeskView />
   }
